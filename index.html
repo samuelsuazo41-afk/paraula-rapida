@@ -37,7 +37,7 @@
 
 <div class="container">
 
-  <!-- Tab Mapa = Selector de Nivells -->
+  <!-- Tab Mapa = Selector de 100 Nivells -->
   <div id="tab-mapa" class="tab-content active">
     <h2 style="margin-bottom: 20px;">🗺️ 100 Nivells</h2>
     <div id="mapa-nivells"></div>
@@ -57,7 +57,7 @@
     </div>
   </div>
 
-  <!-- Tab Gremi = Biblioteca + Tips -->
+  <!-- Tab Gremi = Biblioteca + Tips + Diccionari -->
   <div id="tab-gremi" class="tab-content">
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="mostrarTab('diccionari', event)">📖 Diccionari</button>
@@ -74,7 +74,7 @@
     <span class="nav-icon">🗺️</span>
     <span>Nivells</span>
   </div>
-  <div class="nav-item" onclick="canviarTab('missio', event); carregarCartaNivell(window.nivellActual || 1)">
+  <div class="nav-item" onclick="canviarTab('missio', event)">
     <span class="nav-icon">🎯</span>
     <span>Jugar</span>
   </div>
@@ -99,17 +99,9 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- ORDEN IMPORTANTE: datos antes que lógica -->
+<!-- ORDEN CRÍTICO: datos antes que lógica -->
 <script src="./emoji-data.js"></script>
 <script src="./main.js"></script>
-
-<!-- Inicializar joc -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  window.nivellActual = 1;
-  carregarCartaNivell(1);
-});
-</script>
 
 </body>
 </html>
