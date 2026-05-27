@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- Iconos - ya los tienes -->
+<!-- Iconos -->
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
@@ -74,7 +74,7 @@
     <span class="nav-icon">🗺️</span>
     <span>Nivells</span>
   </div>
-  <div class="nav-item" onclick="canviarTab('missio', event)">
+  <div class="nav-item" onclick="canviarTab('missio', event); carregarCartaNivell(window.nivellActual || 1)">
     <span class="nav-icon">🎯</span>
     <span>Jugar</span>
   </div>
@@ -99,6 +99,17 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<!-- ORDEN IMPORTANTE: datos antes que lógica -->
+<script src="./emoji-data.js"></script>
 <script src="./main.js"></script>
+
+<!-- Inicializar joc -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.nivellActual = 1;
+  carregarCartaNivell(1);
+});
+</script>
+
 </body>
 </html>
