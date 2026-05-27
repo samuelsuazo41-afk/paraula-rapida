@@ -1,5 +1,14 @@
-// main.js - Paraula Ràpida v1.1 - Pack Catalunya complet
+// main.js - Paraula Ràpida v1.2 - 100 nivells + Mapa
 // Depèn de: emoji-data.js carregat abans
+
+// === CONFIG PROGRÉS ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v12')) || {
+  nivellActual: 1,
+  nivellMaximDesbloquejat: 1,
+  encerts: 0,
+  fallades: 0,
+  record: 0
+};
 
 // === PLANTILLES DE FRASES ===
 const PLANTILLES_FRASES = {
@@ -55,7 +64,7 @@ const PLANTILLES_FRASES = {
   ]
 };
 
-// === POOLS D'EMOJIS COMPATIBLES ===
+// === POOLS D'EMOJIS ===
 const POOLS_COMPATIBLES = {
   persona: EMOJI_DATA.emojis.B1.persona,
   animal: [...EMOJI_DATA.emojis.B1.animal,...EMOJI_DATA.emojis.B2.animal_ext],
@@ -70,7 +79,6 @@ const POOLS_COMPATIBLES = {
   esport: [...["⚽","🏀","🏐","🎾","🏓","🏸","🥊","🏊","🚴","⚾","🏏","🏉","⛳","🎯","🏹","🎣","🤿","🥋","🏇","🏂","⛷️","🛹","🏆"],...EMOJI_DATA.emojis.B3.esports_catalans],
   roba: ["👕","👗","👖","👟","👠","🧢","👒","🧣","🧤","👚","👛","👜"],
   menjar: EMOJI_DATA.emojis.B1.menjar_basic,
-  ciutat: ["🏛️","🗼","🌉","🏙️","🗽","🏰"],
   ciencia: ["🔬","🧪","🧬","🔭","⚗️","🧠","⚛️"],
   cinema: ["🎬","🎥","📽️","🎞️","🍿"],
   simbol: EMOJI_DATA.emojis.B3.simbols,
@@ -80,7 +88,6 @@ const POOLS_COMPATIBLES = {
   menjar_catala: EMOJI_DATA.emojis.B3.menjar_catala
 };
 
-// === FILTRE SEMÀNTIC ===
 const FILTRE_SEMANTIC = {
   persona: {verbs: ["mira","troba","escolta","va","juga","treballa","compra","porta","llegeix","balla","celebra","fotografia","toca","canta","pinta","cuida","grava","guanya","ensenya","repara","veu","tasta","menja","cuina"]},
   animal: {verbs: ["corre","dorm","juga","amaga","caça","fuig"]},
@@ -105,8 +112,9 @@ function getRandomFrom(arr) {
 function getDificultatPerNivell(nivell) {
   if (nivell <= 10) return 1;
   if (nivell <= 30) return 2;
-  if (nivell <= 70) return 3;
-  return nivell <= 90? 4 : 5;
+  if (nivell <= 50) return 3;
+  if (nivell <= 90) return 4;
+  return 5;
 }
 
 function getPlantillesPerNivell(nivell) {
@@ -142,20 +150,17 @@ function generarFrase(nivell) {
   const plantilla = getPlantillesPerNivell(nivell);
   let frase = plantilla.text;
   const verbContext = plantilla.text.toLowerCase();
-
   const placeholders = frase.match(/{(\w+)}/g) || [];
 
   placeholders.forEach(ph => {
     const cat = ph.replace(/[{}]/g, '');
     let emoji = "❓";
     let intents = 0;
-
     do {
       const pool = POOLS_COMPATIBLES[cat] || ["❓"];
       emoji = getRandomFrom(pool);
       intents++;
     } while (intents < 5 &&!esCompatible(cat, verbContext));
-
     frase = frase.replace(ph, emoji);
   });
 
@@ -170,32 +175,129 @@ function generarFrase(nivell) {
   };
 }
 
-// === INTEGRACIÓ AMB EL JOC ===
+// === MAPA DE 100 NIVELLS ===
+function generarMapaNivells() {
+  const contenedor = document.getElementById('mapa-nivells');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '';
+
+  for (let i = 1; i <= 100; i++) {
+    const btn = document.createElement('div');
+    btn.className = 'nivell-btn';
+
+    if (i > estatJoc.nivellMaximDesbloquejat) {
+      btn.classList.add('bloquejat');
+      btn.innerHTML = `🔒<br>${i}`;
+    } else if (i < estatJoc.nivellActual) {
+      btn.classList.add('completat');
+      btn.innerHTML = `✅<br>${i}`;
+    } else if (i === estatJoc.nivellActual) {
+      btn.classList.add('actiu');
+      btn.innerHTML = `🎯<br>${i}`;
+    } else {
+      btn.innerHTML = `${i}`;
+    }
+
+    btn.onclick = () => {
+      if (i <= estatJoc.nivellMaximDesbloquejat) {
+        estatJoc.nivellActual = i;
+        canviarTab('missio', null);
+        carregarCartaNivell(i);
+        generarMapaNivells();
+      }
+    };
+
+    contenedor.appendChild(btn);
+  }
+}
+
+// === SISTEMA DE JOC ===
+function guardarEstat() {
+  localStorage.setItem('paraulaRapida_v12', JSON.stringify(estatJoc));
+}
+
+function actualitzarUI() {
+  document.getElementById('nivell-actual').textContent = `Nivell ${estatJoc.nivellActual} - B${getDificultatPerNivell(estatJoc.nivellActual)}`;
+  document.getElementById('stats').textContent = `Encerts: ${estatJoc.encerts} | Fallades: ${estatJoc.fallades}`;
+  document.getElementById('record').textContent = `🏆 Rècord: ${estatJoc.record}`;
+}
+
 function carregarCartaNivell(nivell) {
   const carta = generarFrase(nivell);
-
   const cartaEl = document.getElementById('carta-actual');
   const feedbackEl = document.getElementById('minijoc-feedback');
+  const titolEl = document.getElementById('minijoc-titol');
 
+  if (titolEl) titolEl.textContent = `Nivell ${nivell}`;
   if (cartaEl) cartaEl.innerHTML = carta.frase;
   if (feedbackEl) {
+    feedbackEl.className = '';
+    feedbackEl.innerHTML = '';
     feedbackEl.dataset.resposta = carta.fraseNet;
     feedbackEl.dataset.gramatica = carta.gramatica;
     feedbackEl.dataset.explicacio = carta.explicacio;
     feedbackEl.dataset.aquaval = carta.aquaval;
     feedbackEl.dataset.tema = carta.tema;
   }
-
   return carta;
 }
 
-// === VALIDACIÓ DE RESPOSTA ===
 function validarResposta(respostaUsuari, respostaCorrecta) {
   const neta = respostaUsuari.toLowerCase().trim().replace(/[^\p{L}\p{N}\s]/gu, '');
   return neta === respostaCorrecta;
 }
 
-// Export per si uses modules
-if (typeof module!== 'undefined') {
-  module.exports = {generarFrase, carregarCartaNivell, validarResposta};
-     }
+// === BOTONS DEL JOC ===
+window.encertarCarta = function() {
+  const feedback = document.getElementById('minijoc-feedback');
+  const resposta = feedback.dataset.resposta;
+
+  feedback.className = 'correcte';
+  let html = `✅ Correcte!<br><div class="gramatica">${feedback.dataset.gramatica}: ${feedback.dataset.explicacio}</div>`;
+  if (feedback.dataset.tema && feedback.dataset.tema.includes('catalan')) {
+    html += `<div class="tema-cultura">CULTURA CATALANA</div>`;
+  }
+  feedback.innerHTML = html;
+
+  estatJoc.encerts++;
+  if (estatJoc.nivellActual > estatJoc.record) estatJoc.record = estatJoc.nivellActual;
+  if (estatJoc.nivellActual === estatJoc.nivellMaximDesbloquejat && estatJoc.nivellActual < 100) {
+    estatJoc.nivellMaximDesbloquejat++;
+  }
+  if (estatJoc.nivellActual < 100) estatJoc.nivellActual++;
+  guardarEstat();
+  actualitzarUI();
+
+  setTimeout(() => {
+    carregarCartaNivell(estatJoc.nivellActual);
+  }, 2000);
+}
+
+window.passarCarta = function() {
+  estatJoc.fallades++;
+  guardarEstat();
+  actualitzarUI();
+  carregarCartaNivell(estatJoc.nivellActual);
+}
+
+// === NAVEGACIÓ TABS ===
+window.canviarTab = function(tab, event) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (event) event.currentTarget.classList.add('active');
+  if (tab === 'mapa') generarMapaNivells();
+}
+
+window.mostrarTab = function(tab, event) {
+  document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
+  document.getElementById('gremi-contenidor').innerHTML = `<p style="padding:20px;text-align:center;color:var(--text-sec)">Contingut de ${tab} - próximament</p>`;
+}
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded', () => {
+  actualitzarUI();
+  carregarCartaNivell(estatJoc.nivellActual);
+});
