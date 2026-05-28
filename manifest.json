@@ -1,7 +1,7 @@
 {
   "name": "Paraula Ràpida",
   "short_name": "Paraula",
-  "description": "Joc per aprendre català B1-B3 en 100 nivells",
+  "description": "Joc per aprendre català B1-B3 en 100 nivells amb emojis i tips Parlantito",
   "lang": "ca",
   "start_url": "./index.html",
   "scope": "./",
@@ -23,5 +23,21 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["education", "games", "language"]
+  "categories": ["education", "games", "language"],
+  "shortcuts": [
+    {
+      "name": "Jugar",
+      "short_name": "Jugar",
+      "description": "Anar directe a la Mecànica 1",
+      "url": "./index.html#tab-missio",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Botiga",
+      "short_name": "Botiga", 
+      "description": "Comprar packs d’emojis",
+      "url": "./index.html#tab-botiga",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
