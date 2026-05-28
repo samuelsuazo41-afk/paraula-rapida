@@ -1,8 +1,8 @@
-// main.js - Paraula Ràpida v2.5
+// main.js - Paraula Ràpida v2.7
 // Inclou generarFrase fallback + proteccions nulls + motor generatiu de lectura
 
-// === CONFIG PROGRÉS v2.5 ===
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v25')) || {
+// === CONFIG PROGRÉS v2.7 ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v27')) || {
   nivellActual: 1,
   nivellMaximDesbloquejat: 1,
   encerts: 0,
