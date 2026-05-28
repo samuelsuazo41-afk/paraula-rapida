@@ -1,276 +1,302 @@
-// main.js - Paraula Ràpida v2.7
-// Inclou generarFrase fallback + proteccions nulls + motor generatiu de lectura
+// main.js v2.7 - Paraula Ràpida complet amb fixes Gremi + Timer + Quiz Tips
 
-// === CONFIG PROGRÉS v2.7 ===
 let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v27')) || {
   nivellActual: 1,
-  nivellMaximDesbloquejat: 1,
-  encerts: 0,
-  fallades: 0,
-  encertsEnAquestNivell: 0,
-  record: 0,
-  monedes: 0,
-  packsComprats: ["base"]
+  monedes: 20,
+  xp: 0,
+  recordRacha: 0,
+  packsComprats: [],
+  memoryParells: 0,
+  idiomaActual: 'ca-es'
 };
 
-let idiomaActual = 'ca-es';
-let cartaActual = null;
-let fraseConstruida = [];
-let cartesVoltejades = [];
-let parellsTrobat = 0;
+let idiomaActual = estatJoc.idiomaActual;
+let fraseActual = null;
+let emojiSeleccionats = [];
+let memoryInterval = null;
 let tipActual = null;
 
-// === UTILITATS BOTIGA ===
-function getEmojisDesbloquejats() {
-  if (typeof PACKS_BOTIGA === 'undefined') return ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼"];
-  let emojis = [];
-  estatJoc.packsComprats.forEach(id => {
-    if (PACKS_BOTIGA[id] && PACKS_BOTIGA[id].emojis) {
-      emojis = emojis.concat(PACKS_BOTIGA[id].emojis);
-    }
-  });
-  return [...new Set(emojis)];
+function guardarEstat() {
+  localStorage.setItem('paraulaRapida_v27', JSON.stringify(estatJoc));
 }
 
-// === GENERAR FRASE - FALLBACK SI NO EXISTEIX FRASES-DATA ===
-function generarFrase(nivell) {
-  if (typeof FRASES_DATA!== 'undefined' && typeof generarFraseExterna === 'function') {
-    return generarFraseExterna(nivell);
-  }
-  // Fallback bàsic per no petar
-  const frasesFallback = [
-    {text: "Hola <span class='emoji'>👋</span> com <span class='emoji'>❓</span> estàs <span class='emoji'>😊</span>"},
-    {text: "Jo <span class='emoji'>❤️</span> el <span class='emoji'>🐱</span> i el <span class='emoji'>🐶</span>"},
-    {text: "Vaig a <span class='emoji'>🏫</span> amb el <span class='emoji'>🚌</span>"}
-  ];
-  return frasesFallback[Math.floor(Math.random() * frasesFallback.length)];
-}
-
-// === UTILITATS ===
 function getDificultatPerNivell(nivell) {
-  if (nivell <= 10) return 1;
-  if (nivell <= 30) return 2;
+  if (nivell <= 25) return 1;
+  if (nivell <= 75) return 2;
   return 3;
 }
 
-function vibrar(patro = [20]) {
-  if (navigator.vibrate) navigator.vibrate(patro);
+function getEmojisPerNivell(nivell) {
+  const dif = getDificultatPerNivell(nivell);
+  const base = EMOJI_DATA.filter(e => e.nivell <= dif);
+  return base.sort(() => Math.random() - 0.5).slice(0, 8);
+}
+
+function getRandomFrase(nivell) {
+  const dif = getDificultatPerNivell(nivell);
+  const frases = FRASES_DATA[dif] || [];
+  return frases[Math.floor(Math.random() * frases.length)];
+}
+
+function getRandomTip(categoria, nivell) {
+  const tips = TIPS_DATA[nivell].filter(t => t.categoria === categoria);
+  return tips[Math.floor(Math.random() * tips.length)];
+}
+
+function getTipTranslation(tip, lang) {
+  const langKey = lang.split('-')[0];
+  return { titol: tip[langKey].titol, text: tip[langKey].text };
 }
 
 function parlarText(text, lang) {
   if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === 'ca'? 'ca-ES' : lang === 'es'? 'es-ES' : 'en-US';
+    if (lang === 'ca') utterance.lang = 'ca-ES';
+    else if (lang === 'es') utterance.lang = 'es-ES';
+    else utterance.lang = 'en-US';
     utterance.rate = 0.9;
     speechSynthesis.speak(utterance);
   }
 }
 
-// === MECÀNICA 1: ARMA LA FRASE ===
-window.novaFrase = function() {
-  cartaActual = generarFrase(estatJoc.nivellActual);
-  fraseConstruida = [];
+// === NAVEGACIÓ ===
+function mostrarTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
 
-  document.getElementById('frase-objectiu').innerHTML = cartaActual.text;
-  document.getElementById('frase-construida').innerHTML = '';
-  document.getElementById('mec2-container').style.display = 'none';
-  document.getElementById('mec1-container').style.display = 'block';
+  if (tab === 'missio') iniciarMec1();
+  if (tab === 'gremi') mostrarGremi();
+  if (tab === 'botiga') mostrarBotiga();
+  if (tab === 'mapa') mostrarMapa();
+}
+
+// === MECÀNICA 1: FRSE EMOJI ===
+window.iniciarMec1 = function() {
+  const contenidor = document.getElementById('minijoc-container');
+  fraseActual = getRandomFrase(estatJoc.nivellActual);
+  emojiSeleccionats = [];
+
+  contenidor.innerHTML = `
+    <div id="minijoc-titol">Mecànica 1: Construeix la frase</div>
+    <div id="instruccio-mec1">Clica els emojis en ordre per formar: "${fraseActual.ca}"</div>
+    <div id="frase-objectiu">${fraseActual.ca}</div>
+    <div id="frase-construida"></div>
+    <div id="grid-emojis"></div>
+    <button class="btn-encert" onclick="comprovarMec1()">Comprovar</button>
+    <div id="minijoc-feedback"></div>
+    <button class="btn-nova" onclick="iniciarMec2()">➡️ Passar a Mecànica 2</button>
+  `;
 
   const grid = document.getElementById('grid-emojis');
-  grid.innerHTML = '';
-
-  const emojisCorrectes = cartaActual.text.match(/<span[^>]*>([^<]+)<\/span>/g)?.map(s => s.replace(/<[^>]+>/g,'')) || [];
-  const totsEmojis = getEmojisDesbloquejats();
-  const distractors = totsEmojis.filter(e =>!emojisCorrectes.includes(e)).sort(() => 0.5 - Math.random()).slice(0, 6);
-  const botones = [...emojisCorrectes,...distractors].sort(() => 0.5 - Math.random());
-
-  botones.forEach(emoji => {
+  const emojis = [...fraseActual.emojis].sort(() => Math.random() - 0.5);
+  emojis.forEach((emoji, idx) => {
     const btn = document.createElement('button');
     btn.className = 'emoji-btn';
     btn.textContent = emoji;
-    btn.onclick = () => afegirEmoji(emoji, btn);
+    btn.onclick = () => afegirEmoji(emoji, idx, btn);
     grid.appendChild(btn);
   });
-
-  document.getElementById('minijoc-feedback').innerHTML = '';
 }
 
-function afegirEmoji(emoji, btn) {
-  fraseConstruida.push(emoji);
-  const zona = document.getElementById('frase-construida');
-  const span = document.createElement('span');
-  span.textContent = emoji;
-  span.className = 'emoji-slot';
-  span.onclick = () => {
-    fraseConstruida = fraseConstruida.filter(e => e!== emoji);
-    zona.removeChild(span);
-    btn.disabled = false;
-  };
-  zona.appendChild(span);
+function afegirEmoji(emoji, idx, btn) {
+  if (btn.disabled) return;
+  emojiSeleccionats.push(emoji);
   btn.disabled = true;
+  const slot = document.createElement('span');
+  slot.className = 'emoji-slot';
+  slot.textContent = emoji;
+  slot.onclick = () => treureEmoji(emoji, idx, btn, slot);
+  document.getElementById('frase-construida').appendChild(slot);
 }
 
-window.comprovarFrase = function() {
-  const feedback = document.getElementById('minijoc-feedback');
-  const emojisCorrectes = cartaActual.text.match(/<span[^>]*>([^<]+)<\/span>/g)?.map(s => s.replace(/<[^>]+>/g,'')) || [];
-  const correcte = JSON.stringify(fraseConstruida) === JSON.stringify(emojisCorrectes);
+function treureEmoji(emoji, idx, btn, slot) {
+  emojiSeleccionats = emojiSeleccionats.filter(e => e!== emoji);
+  btn.disabled = false;
+  slot.remove();
+}
 
+window.comprovarMec1 = function() {
+  const feedback = document.getElementById('minijoc-feedback');
+  const correcte = JSON.stringify(emojiSeleccionats) === JSON.stringify(fraseActual.emojis);
   if (correcte) {
     feedback.className = 'correcte';
-    feedback.innerHTML = `✅ Correcte!<br><div class="gramatica">Ben fet!</div>`;
-    estatJoc.encerts++;
-    estatJoc.encertsEnAquestNivell++;
-    estatJoc.monedes += 10;
-    vibrar([20]);
-
-    setTimeout(() => {
-      document.getElementById('mec1-container').style.display = 'none';
-      document.getElementById('mec2-container').style.display = 'block';
-      document.getElementById('frase-a-traduir').innerHTML = cartaActual.text;
-      document.getElementById('input-traduccio').value = '';
-      document.getElementById('feedback-mec2').innerHTML = '';
-    }, 1500);
-
-    if (estatJoc.encertsEnAquestNivell >= 25) {
-      if (estatJoc.nivellActual === estatJoc.nivellMaximDesbloquejat && estatJoc.nivellActual < 100) {
-        estatJoc.nivellMaximDesbloquejat++;
-      }
-      estatJoc.nivellActual++;
-      estatJoc.encertsEnAquestNivell = 0;
-    }
-    if (estatJoc.nivellActual > estatJoc.record) estatJoc.record = estatJoc.nivellActual;
-
+    feedback.innerHTML = `✅ Correcte! <div class="gramatica">${fraseActual.gramatica}</div>`;
+    estatJoc.xp += 10;
+    estatJoc.recordRacha++;
+    guardarEstat();
+    actualitzarUI();
   } else {
     feedback.className = 'incorrecte';
-    feedback.innerHTML = `❌ Intenta-ho de nou!`;
-    estatJoc.fallades++;
-    vibrar([100]);
+    feedback.innerHTML = `❌ Prova de nou. Ordre correcte: ${fraseActual.emojis.join(' ')}`;
+    estatJoc.recordRacha = 0;
   }
-
-  guardarEstat();
-  actualitzarUI();
 }
 
-// === MECÀNICA 2: TRADUEIX ===
-window.comprovarTraduccio = function() {
+window.iniciarMec2 = function() {
+  const contenidor = document.getElementById('minijoc-container');
+  const frase = getRandomFrase(estatJoc.nivellActual);
+  const langKey = idiomaActual.split('-')[1];
+  contenidor.innerHTML = `
+    <div id="minijoc-titol">Mecànica 2: Traducció</div>
+    <div id="instruccio-mec2">Escriu en ${langKey}:</div>
+    <div id="frase-a-traduir">${frase.ca}</div>
+    <input type="text" id="input-traduccio" placeholder="La teva traducció...">
+    <button class="btn-encert" onclick="comprovarMec2('${frase[langKey]}')">Comprovar</button>
+    <div id="feedback-mec2"></div>
+    <button class="btn-nova" onclick="iniciarMec1()">⬅️ Tornar a Mecànica 1</button>
+  `;
+}
+
+window.comprovarMec2 = function(respostaCorrecta) {
+  const input = document.getElementById('input-traduccio').value.toLowerCase().trim();
   const feedback = document.getElementById('feedback-mec2');
-  feedback.className = 'correcte';
-  feedback.innerHTML = `✅ Molt bé!`;
-  estatJoc.monedes += 5;
-  guardarEstat();
-  actualitzarUI();
-  setTimeout(novaFrase, 1500);
-}
-
-window.saltarMec2 = function() {
-  novaFrase();
-}
-
-// === QUIZ TIPS ===
-window.iniciarQuizTips = function() {
-  const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
-  tipActual = getRandomTip(categoria, nivell);
-
-  document.getElementById('quiz-tips-container').style.display = 'block';
-  const data = getTipTranslation(tipActual, idiomaActual);
-  document.getElementById('pregunta-tip').innerHTML = `Què diu el tip sobre "${data.titol}"?`;
-  document.getElementById('input-resposta-tip').value = '';
-  document.getElementById('feedback-tip').innerHTML = '';
-}
-
-window.parlarTip = function() {
-  if (tipActual) {
-    const lang = idiomaActual.split('-')[0];
-    const data = getTipTranslation(tipActual, idiomaActual);
-    parlarText(data.text, lang);
-  }
-}
-
-window.comprovarRespostaTip = function() {
-  const feedback = document.getElementById('feedback-tip');
-  const data = getTipTranslation(tipActual, idiomaActual);
-  feedback.className = 'correcte';
-  feedback.innerHTML = `✅ Correcte! La resposta era: ${data.text}`;
-  estatJoc.monedes += 3;
-  guardarEstat();
-  actualitzarUI();
-}
-
-window.saltarTip = function() {
-  document.getElementById('quiz-tips-container').style.display = 'none';
-}
-
-// === BOTIGA ===
-window.mostrarBotiga = function() {
-  const contenidor = document.getElementById('botiga-contenidor');
-  if (typeof PACKS_BOTIGA === 'undefined') {
-    contenidor.innerHTML = '<p>Carregant botiga...</p>';
-    return;
-  }
-  let html = `<h3>🛒 Botiga - Monedes: ${estatJoc.monedes}</h3><div class="botiga-grid">`;
-
-  Object.values(PACKS_BOTIGA).forEach(pack => {
-    const estaComprat = estatJoc.packsComprats.includes(pack.id);
-    const puckEmoji = pack.emojis.length > 0? pack.emojis[0] : "📦";
-
-    html += `
-      <div class="pack-card ${estaComprat? 'comprat' : ''}">
-        <div class="puck" style="font-size:48px;text-align:center;margin-bottom:8px;">${puckEmoji}</div>
-        <h4>${pack.nom}</h4>
-        ${estaComprat
-        ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
-          : `<button onclick="comprarPack('${pack.id}')" ${estatJoc.monedes < pack.preu? 'disabled' : ''}>
-               ${pack.preu} monedes
-             </button>`
-        }
-      </div>`;
-  });
-  html += `</div>`;
-  contenidor.innerHTML = html;
-}
-
-window.comprarPack = function(id) {
-  const pack = PACKS_BOTIGA[id];
-  if (estatJoc.monedes >= pack.preu &&!estatJoc.packsComprats.includes(id)) {
-    estatJoc.monedes -= pack.preu;
-    estatJoc.packsComprats.push(id);
+  const correcte = input === respostaCorrecta.toLowerCase();
+  if (correcte) {
+    feedback.className = 'correcte';
+    feedback.textContent = '✅ Molt bé!';
+    estatJoc.monedes += 5;
     guardarEstat();
-    mostrarBotiga();
     actualitzarUI();
+  } else {
+    feedback.className = 'incorrecte';
+    feedback.textContent = `❌ La resposta era: ${respostaCorrecta}`;
   }
+}
+
+// === GREMI AMB SUB-TABS ===
+window.mostrarGremi = function() {
+  const contenidor = document.getElementById('gremi-contenidor');
+  contenidor.innerHTML = `
+    <div class="sub-tabs">
+      <button class="sub-tab-btn active" onclick="mostrarSubTab('diccionari', this)">📖 Diccionari</button>
+      <button class="sub-tab-btn" onclick="mostrarSubTab('memory', this)">🎮 Mini-joc</button>
+      <button class="sub-tab-btn" onclick="mostrarSubTab('tips', this)">💡 Tips</button>
+      <button class="sub-tab-btn" onclick="mostrarSubTab('lectura', this)">📚 Lectura</button>
+    </div>
+    <div id="gremi-subcontent"></div>
+  `;
+  mostrarSubTab('diccionari', document.querySelector('.sub-tab-btn'));
+}
+
+window.mostrarSubTab = function(tab, btn) {
+  document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (window.memoryInterval) {
+    clearInterval(window.memoryInterval);
+    window.memoryInterval = null;
+  }
+
+  if (tab === 'diccionari') mostrarDiccionari();
+  if (tab === 'memory') mostrarMemory();
+  if (tab === 'tips') mostrarTips();
+  if (tab === 'lectura') mostrarLectura();
 }
 
 // === DICCIONARI ===
 window.mostrarDiccionari = function() {
-  const contenidor = document.getElementById('gremi-contenidor');
-  const emojisDesbloquejats = getEmojisDesbloquejats();
+  const contenidor = document.getElementById('gremi-subcontent');
+  const emojis = getEmojisPerNivell(estatJoc.nivellActual);
+  contenidor.innerHTML = `
+    <h3>📖 Diccionari d'Emojis</h3>
+    <div class="diccionari-grid">
+      ${emojis.map(e => `<div class="emoji-item" title="${e.ca}">${e.emoji}</div>`).join('')}
+    </div>
+  `;
+}
 
-  let html = `<h3>📖 Diccionari d’Emojis</h3><div class="diccionari-grid">`;
-  emojisDesbloquejats.slice(0, 100).forEach(emoji => {
-    html += `<div class="emoji-item">${emoji}</div>`;
+// === MEMORY ===
+window.mostrarMemory = function() {
+  const contenidor = document.getElementById('gremi-subcontent');
+  estatJoc.memoryParells = 0;
+
+  if (window.memoryInterval) {
+    clearInterval(window.memoryInterval);
+    window.memoryInterval = null;
+  }
+
+  const emojis = getEmojisPerNivell(estatJoc.nivellActual).slice(0,6);
+  const parelles = [...emojis,...emojis].sort(() => Math.random()-0.5);
+
+  contenidor.innerHTML = `
+    <div class="memory-grid" id="memory-grid"></div>
+    <div id="memory-stats">Parells: 0/6 | Temps: 0</div>
+  `;
+
+  let temps = 0;
+  window.memoryInterval = setInterval(() => {
+    temps++;
+    const stats = document.getElementById('memory-stats');
+    if (stats) stats.textContent = `Parells: ${estatJoc.memoryParells}/6 | Temps: ${temps}`;
+  }, 1000);
+
+  const grid = document.getElementById('memory-grid');
+  parelles.forEach((e) => {
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.dataset.emoji = e.emoji;
+    card.onclick = () => voltejarCarta(card);
+    grid.appendChild(card);
   });
-  html += `</div>`;
-  contenidor.innerHTML = html;
+}
+
+let cartesVoltejades = [];
+function voltejarCarta(card) {
+  if (card.classList.contains('voltejada') || cartesVoltejades.length === 2) return;
+  card.classList.add('voltejada');
+  card.textContent = card.dataset.emoji;
+  cartesVoltejades.push(card);
+  if (cartesVoltejades.length === 2) {
+    setTimeout(() => {
+      if (cartesVoltejades[0].dataset.emoji === cartesVoltejades[1].dataset.emoji) {
+        cartesVoltejades.forEach(c => c.classList.add('acertada'));
+        estatJoc.memoryParells++;
+        if (estatJoc.memoryParells === 6) {
+          clearInterval(window.memoryInterval);
+          alert('Guanyat!');
+          estatJoc.monedes += 10;
+          guardarEstat();
+          actualitzarUI();
+        }
+      } else {
+        cartesVoltejades.forEach(c => {
+          c.classList.remove('voltejada');
+          c.textContent = '';
+        });
+      }
+      cartesVoltejades = [];
+    }, 800);
+  }
 }
 
 // === TIPS ===
 window.mostrarTips = function() {
-  const contenidor = document.getElementById('gremi-contenidor');
+  const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
   const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
-  const tip = getRandomTip(categoria, nivell);
-  const data = getTipTranslation(tip, idiomaActual);
+  tipActual = getRandomTip(categoria, nivell);
+  const data = getTipTranslation(tipActual, idiomaActual);
+
+  const textCA = tipActual.ca.text.replace(/'/g, "\\'");
+  const textES = tipActual.es.text.replace(/'/g, "\\'");
+  const textEN = tipActual.en.text.replace(/'/g, "\\'");
 
   contenidor.innerHTML = `
     <div id="tips-container">
       <div class="tip-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <h3>${data.titol}</h3>
-          <button onclick="parlarText('${data.text.replace(/'/g, "\\'")}', '${idiomaActual.split('-')[0]}')" class="btn-audio">🔊</button>
+          <button onclick="parlarText('${textCA}', 'ca')" class="btn-audio">🔊</button>
         </div>
-        <p style="color:var(--text-sec);line-height:1.6;">${data.text}</p>
+        <p id="tip-text" style="color:var(--text-sec);line-height:1.6;">${data.text}</p>
+        <div class="lang-audio-buttons">
+          <button onclick="parlarText('${textCA}', 'ca'); canviarTextTip('${textCA}')" class="lang-btn active">CA</button>
+          <button onclick="parlarText('${textES}', 'es'); canviarTextTip('${textES}')" class="lang-btn">ES</button>
+          <button onclick="parlarText('${textEN}', 'en'); canviarTextTip('${textEN}')" class="lang-btn">EN</button>
+        </div>
       </div>
       <button class="btn-encert" onclick="iniciarQuizTips()">🧠 Contestar</button>
       <div id="quiz-tips-container" style="display:none">
@@ -285,176 +311,134 @@ window.mostrarTips = function() {
   `;
 }
 
-// === LECTURA GENERATIVA v2.5 ===
+window.canviarTextTip = function(nouText) {
+  document.getElementById('tip-text').textContent = nouText;
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+window.iniciarQuizTips = function() {
+  document.getElementById('quiz-tips-container').style.display = 'block';
+  const data = getTipTranslation(tipActual, idiomaActual);
+  document.getElementById('pregunta-tip').textContent = `Què vol dir aquest tip? ${data.titol}`;
+}
+
+window.comprovarRespostaTip = function() {
+  const input = document.getElementById('input-resposta-tip').value.toLowerCase().trim();
+  const feedback = document.getElementById('feedback-tip');
+  const resposta = tipActual[idiomaActual.split('-')[0]].text.toLowerCase();
+  if (input.includes(resposta.slice(0,10))) {
+    feedback.className = 'correcte';
+    feedback.textContent = '✅ Correcte!';
+    estatJoc.xp += 5;
+    guardarEstat();
+    actualitzarUI();
+  } else {
+    feedback.className = 'incorrecte';
+    feedback.textContent = `❌ Pista: ${resposta.slice(0,30)}...`;
+  }
+}
+
+window.saltarTip = function() {
+  mostrarTips();
+}
+
+window.parlarTip = function() {
+  const data = getTipTranslation(tipActual, idiomaActual);
+  parlarText(data.text, idiomaActual.split('-')[0]);
+}
+
+// === LECTURA ===
 window.mostrarLectura = function() {
-  const contenidor = document.getElementById('gremi-contenidor');
+  const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-
-  let html = `<h3>📚 Lectura Nivell B${nivell}</h3>`;
-  html += `<p style="color:var(--text-sec);margin-bottom:20px;">Textos generats automàticament. Toca 🔊 per escoltar.</p>`;
-
-  // Genera 3 lectures noves cada cop
-  for(let i=0; i<3; i++) {
-    const text = generarTextLectura(nivell);
-    const titol = `Lectura ${i+1} - B${nivell}`;
-    const textEscapat = text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
+  const lang = idiomaActual.split('-')[0];
+  let html = '<h3>📚 Lectures</h3>';
+  for (let i = 0; i < 3; i++) {
+    const text = generarTextLectura(nivell, lang);
     html += `
       <div class="lectura-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <h4>${titol}</h4>
-          <button onclick="parlarText('${textEscapat}', 'ca')" class="btn-audio">🔊 Escoltar</button>
-        </div>
-        <p style="color:var(--text-sec);line-height:1.7;">${text}</p>
+        <h4>Lectura ${i+1} - B${nivell}</h4>
+        <button class="btn-audio" onclick="parlarText('${text.replace(/'/g,"\\'")}', '${lang}')">🔊 Escoltar</button>
+        <p>${text}</p>
       </div>
     `;
   }
-
-  html += `<button onclick="mostrarLectura()" class="btn-nova" style="margin-top:20px;">🔄 Noves lectures</button>`;
+  html += `<button class="btn-nova" onclick="mostrarLectura()">🔄 Noves lectures</button>`;
   contenidor.innerHTML = html;
 }
 
-// === MEMORY ===
-window.iniciarMemory = function() {
-  const contenidor = document.getElementById('gremi-contenidor');
-  const totsEmojis = getEmojisDesbloquejats();
-  const parells = totsEmojis.sort(() => 0.5 - Math.random()).slice(0, 6);
-  const cartes = [...parells,...parells].sort(() => 0.5 - Math.random());
-
-  parellsTrobat = 0;
-  cartesVoltejades = [];
-
-  let html = `<div class="memory-grid">`;
-  cartes.forEach((emoji, i) => {
-    html += `<div class="memory-card" data-emoji="${emoji}" onclick="voltearCarta(this, ${i})">?</div>`;
-  });
-  html += `</div><div id="memory-stats">Parells: 0/6 | Temps: 60</div>`;
-  contenidor.innerHTML = html;
-
-  let temps = 60;
-  const timer = setInterval(() => {
-    temps--;
-    const statsEl = document.getElementById('memory-stats');
-    if (statsEl) statsEl.textContent = `Parells: ${parellsTrobat}/6 | Temps: ${temps}`;
-    if (temps <= 0 || parellsTrobat >= 6) clearInterval(timer);
-  }, 1000);
-}
-
-window.voltearCarta = function(card) {
-  if (cartesVoltejades.length >= 2 || card.classList.contains('voltejada')) return;
-  card.textContent = card.dataset.emoji;
-  card.classList.add('voltejada');
-  cartesVoltejades.push(card);
-
-  if (cartesVoltejades.length === 2) {
-    setTimeout(() => {
-      if (cartesVoltejades[0].dataset.emoji === cartesVoltejades[1].dataset.emoji) {
-        cartesVoltejades.forEach(c => c.classList.add('acertada'));
-        parellsTrobat++;
-        estatJoc.monedes += 2;
-        guardarEstat();
-        actualitzarUI();
-      } else {
-        cartesVoltejades.forEach(c => {
-          c.textContent = '?';
-          c.classList.remove('voltejada');
-        });
-      }
-      cartesVoltejades = [];
-    }, 800);
-  }
-}
-
-// === UI I NAVEGACIÓ ===
-function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v25', JSON.stringify(estatJoc));
-}
-
-function actualitzarUI() {
-  const header = document.getElementById('app-header');
-  const dificultat = getDificultatPerNivell(estatJoc.nivellActual);
-
-  if (header) {
-    if (dificultat === 1) {
-      header.style.background = 'linear-gradient(135deg, #FF6B35, #F7931E)';
-    } else if (dificultat === 2) {
-      header.style.background = 'linear-gradient(135deg, #9C27B0, #E91E63)';
-    } else {
-      header.style.background = 'linear-gradient(135deg, #2196F3, #00BCD4)';
-    }
-  }
-
-  document.getElementById('nivell-actual').textContent =
-    `Nivell ${estatJoc.nivellActual} - B${dificultat} | Progrés: ${estatJoc.encertsEnAquestNivell}/25`;
-  document.getElementById('stats').textContent = `Monedes: ${estatJoc.monedes} | Rècord: ${estatJoc.record}`;
-}
-
-function generarMapaNivells() {
-  const contenedor = document.getElementById('mapa-nivells');
-  if (!contenedor) return;
-  contenedor.innerHTML = '';
-
+// === MAPA 100 NIVELLS ===
+window.mostrarMapa = function() {
+  const contenidor = document.getElementById('mapa-contenidor');
+  let html = '<div id="mapa-nivells">';
   for (let i = 1; i <= 100; i++) {
-    const btn = document.createElement('div');
-    btn.className = 'nivell-btn';
-
-    if (i > estatJoc.nivellMaximDesbloquejat) {
-      btn.classList.add('bloquejat');
-      btn.innerHTML = `🔒<br>${i}`;
-    } else if (i < estatJoc.nivellActual) {
-      btn.classList.add('completat');
-      btn.innerHTML = `✅<br>${i}`;
-    } else if (i === estatJoc.nivellActual) {
-      btn.classList.add('actiu');
-      btn.innerHTML = `🎯<br>${i}`;
-    } else {
-      btn.innerHTML = `${i}`;
-    }
-
-    btn.onclick = () => {
-      if (i <= estatJoc.nivellMaximDesbloquejat) {
-        estatJoc.nivellActual = i;
-        estatJoc.encertsEnAquestNivell = 0;
-        canviarTab('missio', null);
-        novaFrase();
-        generarMapaNivells();
-      }
-    };
-    contenedor.appendChild(btn);
+    const bloquejat = i > estatJoc.nivellActual + 1;
+    const completat = i < estatJoc.nivellActual;
+    const actiu = i === estatJoc.nivellActual;
+    html += `<div class="nivell-btn ${bloquejat?'bloquejat':''} ${completat?'completat':''} ${actiu?'actiu':''}" onclick="${bloquejat?'':`seleccionarNivell(${i})`}">
+      ${bloquejat?'🔒':completat?'✅':i}
+      ${!bloquejat &&!completat?i:''}
+    </div>`;
   }
+  html += '</div>';
+  contenidor.innerHTML = html;
 }
 
-window.canviarTab = function(tab, event) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(`tab-${tab}`).classList.add('active');
-  if (event) event.currentTarget.classList.add('active');
-
-  if (tab === 'mapa') generarMapaNivells();
-  if (tab === 'missio') novaFrase();
-  if (tab === 'gremi') mostrarDiccionari();
-  if (tab === 'botiga') mostrarBotiga();
-}
-
-window.mostrarTab = function(tab, event) {
-  document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-  if (event) event.currentTarget.classList.add('active');
-
-  if (tab === 'diccionari') mostrarDiccionari();
-  if (tab === 'minijocs') iniciarMemory();
-  if (tab === 'tips') mostrarTips();
-  if (tab === 'lectura') mostrarLectura();
-}
-
-// Init
-document.addEventListener('DOMContentLoaded', () => {
-  const selector = document.getElementById('idioma-select');
-  if (selector) {
-    selector.addEventListener('change', (e) => {
-      idiomaActual = e.target.value;
-    });
-  }
+window.seleccionarNivell = function(nivell) {
+  estatJoc.nivellActual = nivell;
+  guardarEstat();
   actualitzarUI();
-  novaFrase();
-  generarMapaNivells();
+  mostrarTab('missio');
+}
+
+// === BOTIGA ===
+window.mostrarBotiga = function() {
+  const contenidor = document.getElementById('botiga-contenidor');
+  let html = '<div class="botiga-grid">';
+  BOTIGA_PACKS.forEach(pack => {
+    const comprat = estatJoc.packsComprats.includes(pack.id);
+    html += `
+      <div class="pack-card ${comprat?'comprat':''}">
+        <div class="puck">${pack.emoji}</div>
+        <h4>${pack.nom}</h4>
+        <p>${pack.preu} monedes</p>
+        <button ${comprat?'disabled':''} onclick="comprarPack('${pack.id}', ${pack.preu})">
+          ${comprat?'Comprat':'Comprar'}
+        </button>
+      </div>
+    `;
+  });
+  html += '</div>';
+  contenidor.innerHTML = html;
+}
+
+window.comprarPack = function(id, preu) {
+  if (estatJoc.monedes >= preu) {
+    estatJoc.monedes -= preu;
+    estatJoc.packsComprats.push(id);
+    guardarEstat();
+    actualitzarUI();
+    mostrarBotiga();
+  }
+}
+
+// === UI ===
+function actualitzarUI() {
+  document.getElementById('nivell-actual').textContent = `Nivell ${estatJoc.nivellActual} - B${getDificultatPerNivell(estatJoc.nivellActual)}`;
+  document.getElementById('monedes').textContent = estatJoc.monedes;
+  document.getElementById('xp').textContent = estatJoc.xp;
+  document.getElementById('record').textContent = estatJoc.recordRacha;
+}
+
+// === IDIOMA ===
+document.getElementById('idioma-select').addEventListener('change', (e) => {
+  idiomaActual = e.target.value;
+  estatJoc.idiomaActual = idiomaActual;
+  guardarEstat();
+  iniciarMec1();
 });
+
+// === INIT ===
+actualitzarUI();
+iniciarMec1();
