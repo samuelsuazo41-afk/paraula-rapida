@@ -314,4 +314,4 @@ function seleccionarNivell(nivell) {
   actualitzarUI();
   mostrarGremi();
   setTimeout(iniciarMinijoc, 100);
-}
+} 
