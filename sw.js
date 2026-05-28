@@ -1,31 +1,40 @@
-const CACHE_NAME = 'paraula-rapida-v14';
+const CACHE_NAME = 'paraula-rapida-v20';
 const FILES_TO_CACHE = [
   './',
   './index.html',
   './styles.css',
-  './main.js',
-  './emoji-data.js',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  // Dades - ordre no importa aquí, però han d’estar tots cachejats
+  './emoji-data.js',
+  './frases-data.js',
+  './tips-data.js',
+  './botiga-data.js',
+  // Lògica
+  './main.js'
 ];
 
-// Install: cache all files + activar nuevo SW al instante
+// Install: cachejar tot + activar nou SW al instant
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(FILES_TO_CACHE))
+      .then(cache => {
+        console.log('[SW] Cachejant arxius v15');
+        return cache.addAll(FILES_TO_CACHE);
+      })
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate: borrar cachés viejas v12, v13, etc
+// Activate: esborrar cachés velles v12, v13, v14
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keyList => {
       return Promise.all(
         keyList.map(key => {
-          if (key !== CACHE_NAME) {
+          if (key !== CACHE_NAME && key.startsWith('paraula-rapida-')) {
+            console.log('[SW] Esborrant caché vella:', key);
             return caches.delete(key);
           }
         })
@@ -34,10 +43,25 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: cache first, fallback to network
+// Fetch: cache first, fallback a network
 self.addEventListener('fetch', event => {
+  // Ignorar requests que no són GET
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request)
-      .then(response => response || fetch(event.request))
+      .then(response => {
+        // Si està al cache, tornar-ho. Si no, anar a network i cachejar-ho
+        return response || fetch(event.request).then(networkResponse => {
+          return caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        });
+      })
+      .catch(() => {
+        // Si falla tot, tornar index.html per que l’app PWA segueixi funcionant offline
+        return caches.match('./index.html');
+      })
   );
 });
