@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Paraula Ràpida</title>
 <meta name="description" content="Joc per aprendre català B1-B3 en 100 nivells">
-<meta name="theme-color" content="#8B0000">
+<meta name="theme-color" content="#FF6B35">
 
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -21,9 +21,9 @@
 </head>
 <body>
 
-<header>
+<header id="app-header">
   <h1 id="app-titol">Paraula Ràpida</h1>
-  <div id="nivell-actual" style="font-size: 12px; margin-top: 4px;">Nivell 1 - B1 | Progrés: 0/25</div>
+  <div id="nivell-actual">Nivell 1 - B1 | Progrés: 0/25</div>
 </header>
 
 <div class="stats-bar">
@@ -43,31 +43,32 @@
     <div id="mapa-nivells"></div>
   </div>
 
-  <!-- Tab Missio = Joc: ARMA LA FRASE -->
+  <!-- Tab Missio = Joc: MECÀNICA 1 ARMA LA FRASE -->
   <div id="tab-missio" class="tab-content">
     <div id="minijoc-container">
       <h3 id="minijoc-titol">Nivell 1</h3>
-      <div id="frase-objectiu" style="font-size:18px;margin-bottom:15px;text-align:center;"></div>
-      <div id="frase-construida" style="min-height:50px;border:2px dashed var(--border);border-radius:8px;margin-bottom:15px;padding:10px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;"></div>
-      <div id="grid-emojis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px;"></div>
-      <button class="btn-encert" onclick="comprovarFrase()" style="width:100%;">Comprovar</button>
+      <div id="frase-objectiu"></div>
+      <div id="frase-construida"></div>
+      <div id="grid-emojis"></div>
+      <button class="btn-encert" onclick="comprovarFrase()">Comprovar</button>
       <div id="minijoc-feedback"></div>
     </div>
   </div>
 
-  <!-- Tab Gremi = Biblioteca + Tips + Diccionari + Mini-joc -->
+  <!-- Tab Gremi = Biblioteca: Diccionari + Mini-joc + Tips + Lectura -->
   <div id="tab-gremi" class="tab-content">
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="mostrarTab('diccionari', event)">📖 Diccionari</button>
       <button class="sub-tab-btn" onclick="mostrarTab('minijocs', event)">🎮 Mini-joc</button>
       <button class="sub-tab-btn" onclick="mostrarTab('tips', event)">💡 Tips</button>
+      <button class="sub-tab-btn" onclick="mostrarTab('lectura', event)">📚 Lectura</button>
     </div>
     <div id="gremi-contenidor"></div>
   </div>
 
-  <!-- Tab Botiga NUEVO -->
+  <!-- Tab Botiga -->
   <div id="tab-botiga" class="tab-content">
-    <div id="gremi-contenidor"></div>
+    <div id="botiga-contenidor"></div>
   </div>
 
 </div>
@@ -92,10 +93,6 @@
 </nav>
 
 <script>
-function vibrar() {
-  if (navigator.vibrate) navigator.vibrate(20);
-}
-
 // Registrar Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
