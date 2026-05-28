@@ -29,7 +29,6 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background 0.5s ease;
 }
 
 header h1 {
@@ -101,7 +100,7 @@ header h1 {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* === JUGAR: MECÀNICA 1 + 2 === */
+/* === JUGAR === */
 #minijoc-container {
   background: var(--card);
   border-radius: 16px;
@@ -132,14 +131,6 @@ header h1 {
   color: var(--text);
   font-weight: 600;
   line-height: 1.6;
-}
-
-#frase-objectiu .emoji,
-#frase-a-traduir .emoji {
-  font-size: 28px;
-  margin: 0 2px;
-  cursor: help;
-  border-bottom: 2px dotted var(--accent);
 }
 
 #frase-construida {
@@ -194,8 +185,7 @@ header h1 {
   cursor: not-allowed;
 }
 
-#input-traduccio,
-#input-resposta-tip {
+#input-traduccio {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
@@ -207,8 +197,7 @@ header h1 {
   text-align: center;
 }
 
-#input-traduccio:focus,
-#input-resposta-tip:focus {
+#input-traduccio:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -229,19 +218,6 @@ header h1 {
 
 .btn-encert:active {
   transform: scale(0.98);
-}
-
-.btn-secundari {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 2px solid #333;
-  background: transparent;
-  color: var(--text-sec);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 8px;
 }
 
 .btn-nova {
@@ -267,7 +243,6 @@ header h1 {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 0;
   transition: all 0.2s ease;
 }
 
@@ -276,8 +251,7 @@ header h1 {
 }
 
 #minijoc-feedback,
-#feedback-mec2,
-#feedback-tip {
+#feedback-mec2 {
   min-height: 60px;
   padding: 16px;
   border-radius: 12px;
@@ -287,16 +261,14 @@ header h1 {
 }
 
 #minijoc-feedback.correcte,
-#feedback-mec2.correcte,
-#feedback-tip.correcte {
+#feedback-mec2.correcte {
   background: rgba(76, 175, 80, 0.2);
   border: 2px solid var(--success);
   color: var(--success);
 }
 
 #minijoc-feedback.incorrecte,
-#feedback-mec2.incorrecte,
-#feedback-tip.incorrecte {
+#feedback-mec2.incorrecte {
   background: rgba(244, 67, 54, 0.2);
   border: 2px solid var(--danger);
   color: var(--danger);
@@ -309,7 +281,7 @@ header h1 {
   color: var(--text-sec);
 }
 
-/* === MAPA DE 100 NIVELLS === */
+/* === MAPA === */
 #mapa-nivells {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -381,11 +353,7 @@ header h1 {
   color: white;
 }
 
-/* === TIPS + QUIZ CONTESTAR + LECTURA === */
-#tips-container {
-  max-width: 100%;
-}
-
+/* === TIPS + LECTURA === */
 .tip-card,
 .lectura-card {
   background: var(--card);
@@ -411,18 +379,6 @@ header h1 {
   color: var(--accent);
   font-size: 16px;
   margin-bottom: 8px;
-}
-
-#quiz-tips-container {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px dashed #333;
-}
-
-#pregunta-tip {
-  font-size: 18px;
-  margin-bottom: 12px;
-  line-height: 1.6;
 }
 
 /* Botons idiomes CA/ES/EN a Tips */
@@ -513,7 +469,7 @@ header h1 {
   justify-content: center;
 }
 
-/* === BOTIGA v2.2 === */
+/* === BOTIGA === */
 .botiga-grid {
   display: grid;
   gap: 12px;
