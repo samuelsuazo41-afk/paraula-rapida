@@ -1,8 +1,8 @@
-// main.js - Paraula Ràpida v2.4
-// Inclou generarFrase fallback + proteccions nulls
+// main.js - Paraula Ràpida v2.5
+// Inclou generarFrase fallback + proteccions nulls + motor generatiu de lectura
 
-// === CONFIG PROGRÉS v2.4 ===
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v24')) || {
+// === CONFIG PROGRÉS v2.5 ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v25')) || {
   nivellActual: 1,
   nivellMaximDesbloquejat: 1,
   encerts: 0,
@@ -32,25 +32,9 @@ function getEmojisDesbloquejats() {
   return [...new Set(emojis)];
 }
 
-// === SECCIÓ LECTURA NIVELLADA ===
-const NOTES_LECTURA = {
- 1: [
-    {titol: "El meu dia", text: "Em dic Marta. Sóc estudiant. Cada dia vaig a l'escola amb el meu amic Pau. Ens agrada escoltar música i jugar a futbol."},
-    {titol: "La meva casa", text: "Visc en una casa petita amb la meva família. La meva casa té tres habitacions. La meva habitació és blava i m'agrada molt."}
-  ],
- 2: [
-    {titol: "Un viatge a la muntanya", text: "El cap de setmana passat vaig anar a la muntanya amb els meus amics. Vam caminar durant tres hores. El paisatge era preciós i vam fer moltes fotos."},
-    {titol: "La meva feina", text: "Treballo en una biblioteca. M'agrada ajudar la gent a trobar llibres. Cada dia llegeixo una mica i aprenc coses noves."}
-  ],
- 3: [
-    {titol: "La Festa Major", text: "Ahir va ser la Festa Major del meu poble. Vam ballar sardanes, vam menjar pa amb tomàquet i vam escoltar música tradicional. Va va ser una nit inoblidable."},
-    {titol: "Un llibre interessant", text: "He llegit un llibre sobre la història de Catalunya. He après moltes coses sobre el segle XIX. L'autor explica molt bé els fets i recomano el llibre a tothom."}
-  ]
-};
-
 // === GENERAR FRASE - FALLBACK SI NO EXISTEIX FRASES-DATA ===
 function generarFrase(nivell) {
-  if (typeof FRSES_DATA!== 'undefined' && typeof generarFraseExterna === 'function') {
+  if (typeof FRASES_DATA!== 'undefined' && typeof generarFraseExterna === 'function') {
     return generarFraseExterna(nivell);
   }
   // Fallback bàsic per no petar
@@ -236,7 +220,7 @@ window.mostrarBotiga = function() {
         <div class="puck" style="font-size:48px;text-align:center;margin-bottom:8px;">${puckEmoji}</div>
         <h4>${pack.nom}</h4>
         ${estaComprat
-         ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
+        ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
           : `<button onclick="comprarPack('${pack.id}')" ${estatJoc.monedes < pack.preu? 'disabled' : ''}>
                ${pack.preu} monedes
              </button>`
@@ -301,24 +285,32 @@ window.mostrarTips = function() {
   `;
 }
 
-// === LECTURA ===
+// === LECTURA GENERATIVA v2.5 ===
 window.mostrarLectura = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const notes = NOTES_LECTURA[nivell] || NOTES_LECTURA[1];
 
   let html = `<h3>📚 Lectura Nivell B${nivell}</h3>`;
-  notes.forEach((nota) => {
+  html += `<p style="color:var(--text-sec);margin-bottom:20px;">Textos generats automàticament. Toca 🔊 per escoltar.</p>`;
+
+  // Genera 3 lectures noves cada cop
+  for(let i=0; i<3; i++) {
+    const text = generarTextLectura(nivell);
+    const titol = `Lectura ${i+1} - B${nivell}`;
+    const textEscapat = text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
     html += `
       <div class="lectura-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <h4>${nota.titol}</h4>
-          <button onclick="parlarText('${nota.text.replace(/'/g, "\\'")}', 'ca')" class="btn-audio">🔊</button>
+          <h4>${titol}</h4>
+          <button onclick="parlarText('${textEscapat}', 'ca')" class="btn-audio">🔊 Escoltar</button>
         </div>
-        <p style="color:var(--text-sec);line-height:1.7;">${nota.text}</p>
+        <p style="color:var(--text-sec);line-height:1.7;">${text}</p>
       </div>
     `;
-  });
+  }
+
+  html += `<button onclick="mostrarLectura()" class="btn-nova" style="margin-top:20px;">🔄 Noves lectures</button>`;
   contenidor.innerHTML = html;
 }
 
@@ -375,7 +367,7 @@ window.voltearCarta = function(card) {
 
 // === UI I NAVEGACIÓ ===
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v24', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v25', JSON.stringify(estatJoc));
 }
 
 function actualitzarUI() {
