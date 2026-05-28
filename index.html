@@ -23,7 +23,7 @@
 
 <header id="app-header">
   <h1 id="app-titol">Paraula Ràpida</h1>
-  <div id="nivell-actual">Nivell 1 - B1 | Progrés: 0/25</div>
+  <div id="nivell-actual">Nivell 1 - B1</div>
   <select id="idioma-select">
     <option value="ca-es">Català → Espanyol</option>
     <option value="ca-en">Català → English</option>
@@ -33,59 +33,25 @@
 </header>
 
 <div class="stats-bar">
-  <div class="stat-item">
-    <span id="record">🏆 Rècord: 0</span>
-  </div>
-  <div class="stat-item" id="stats">
-    Monedes: 0 | Rècord: 0
-  </div>
+  <div class="stat-item">🏆 Rècord: <span id="record">0</span></div>
+  <div class="stat-item">Monedes: <span id="monedes">0</span> | XP: <span id="xp">0</span></div>
 </div>
 
 <div class="container">
 
-  <!-- Tab Mapa = Selector de 100 Nivells -->
+  <!-- Tab Mapa -->
   <div id="tab-mapa" class="tab-content active">
     <h2 style="margin-bottom: 20px;">🗺️ 100 Nivells</h2>
     <div id="mapa-nivells"></div>
   </div>
 
-  <!-- Tab Missio = Joc: MECÀNICA 1 ARMA LA FRASE + MECÀNICA 2 TRADUEIX -->
+  <!-- Tab Missio -->
   <div id="tab-missio" class="tab-content">
-    <div id="minijoc-container">
-      <h3 id="minijoc-titol">Nivell 1</h3>
-      
-      <!-- MECÀNICA 1: Arma la frase -->
-      <div id="mec1-container">
-        <p id="instruccio-mec1">Arma la frase correcta:</p>
-        <div id="frase-objectiu"></div>
-        <div id="frase-construida"></div>
-        <div id="grid-emojis"></div>
-        <button class="btn-encert" onclick="comprovarFrase()">Comprovar</button>
-        <div id="minijoc-feedback"></div>
-      </div>
-
-      <!-- MECÀNICA 2: Tradueix -->
-      <div id="mec2-container" style="display:none">
-        <p id="instruccio-mec2">Tradueix la frase:</p>
-        <div id="frase-a-traduir"></div>
-        <input type="text" id="input-traduccio" placeholder="Escriu la traducció...">
-        <button class="btn-encert" onclick="comprovarTraduccio()">Comprovar</button>
-        <button class="btn-secundari" onclick="saltarMec2()">Saltar</button>
-        <div id="feedback-mec2"></div>
-      </div>
-
-      <button class="btn-nova" onclick="novaFrase()">Nova frase</button>
-    </div>
+    <div id="minijoc-container"></div>
   </div>
 
-  <!-- Tab Gremi = Biblioteca: Diccionari + Mini-joc + Tips + Lectura -->
+  <!-- Tab Gremi -->
   <div id="tab-gremi" class="tab-content">
-    <div class="sub-tabs">
-      <button class="sub-tab-btn active" onclick="mostrarTab('diccionari', event)">📖 Diccionari</button>
-      <button class="sub-tab-btn" onclick="mostrarTab('minijocs', event)">🎮 Mini-joc</button>
-      <button class="sub-tab-btn" onclick="mostrarTab('tips', event)">💡 Tips</button>
-      <button class="sub-tab-btn" onclick="mostrarTab('lectura', event)">📚 Lectura</button>
-    </div>
     <div id="gremi-contenidor"></div>
   </div>
 
@@ -96,21 +62,21 @@
 
 </div>
 
-<!-- Bottom Nav - menys JS, més directe -->
+<!-- Bottom Nav -->
 <nav class="bottom-nav">
-  <div class="nav-item active" onclick="canviarTab('mapa', this)">
+  <div class="nav-item active" onclick="mostrarTab('mapa')">
     <span class="nav-icon">🗺️</span>
     Mapa
   </div>
-  <div class="nav-item" onclick="canviarTab('missio', this)">
+  <div class="nav-item" onclick="mostrarTab('missio')">
     <span class="nav-icon">🎯</span>
     Jugar
   </div>
-  <div class="nav-item" onclick="canviarTab('gremi', this)">
+  <div class="nav-item" onclick="mostrarTab('gremi')">
     <span class="nav-icon">🏛️</span>
     Gremi
   </div>
-  <div class="nav-item" onclick="canviarTab('botiga', this)">
+  <div class="nav-item" onclick="mostrarTab('botiga')">
     <span class="nav-icon">🛒</span>
     Botiga
   </div>
@@ -132,7 +98,7 @@ if ('serviceWorker' in navigator) {
 <script src="./frases-data.js"></script>
 <script src="./tips-data.js"></script>
 <script src="./botiga-data.js"></script>
-<script src="./lectura-generator.js"></script>  <!-- MOTOR GENERATIU DE LECTURA -->
+<script src="./lectura-generator.js"></script>
 <script src="./main.js"></script>
 
 </body>
