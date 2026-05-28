@@ -29,13 +29,18 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background 0.5s ease; /* NUEVO: transición suave al cambiar color */
+  transition: background 0.5s ease; /* Transición suave B1→B2→B3 */
 }
 
 header h1 {
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.5px;
+}
+
+#nivell-actual {
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 .stats-bar {
@@ -269,10 +274,6 @@ header h1 {
   color: white;
 }
 
-#gremi-contenidor {
-  min-height: 200px;
-}
-
 /* === MINI-JOC MEMORY === */
 .memory-grid {
   display: grid;
@@ -388,6 +389,43 @@ header h1 {
   cursor: not-allowed;
 }
 
+/* === TIPS + LECTURA CON PARLANTITO === */
+.tip-card,
+.lectura-card {
+  background: var(--card);
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.lectura-card h4 {
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.idioma-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 2px solid #333;
+  background: var(--bg);
+  color: var(--text-sec);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.idioma-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.idioma-btn:active {
+  transform: scale(0.95);
+}
+
 /* === BOTTOM NAV === */
 .bottom-nav {
   position: fixed;
@@ -418,4 +456,4 @@ header h1 {
   font-size: 24px;
   display: block;
   margin-bottom: 4px;
-} 
+}
