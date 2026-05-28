@@ -1,4 +1,5 @@
-// main.js v3.3 - Amb lectura-content.js separat
+// main.js v3.3 - Paraula Ràpida
+// lectura-content.js ha d’estar carregat abans que aquest fitxer
 
 let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v33')) || {
   nivellActual: 1,
@@ -138,9 +139,9 @@ window.mostrarMapa = function() {
     const bloquejat = i > estatJoc.nivellActual;
     const completat = i < estatJoc.nivellActual;
     const actiu = i === estatJoc.nivellActual;
-    html += `<div class="nivell-btn ${bloquejat?'bloquejat':''} ${completat?'completat':''} ${actiu?'actiu':''}"
-      onclick="${bloquejat?'':`seleccionarNivell(${i})`}">
-      ${bloquejat?'🔒':completat?'✅':i}
+    html += `<div class="nivell-btn ${bloquejat? 'bloquejat' : ''} ${completat? 'completat' : ''} ${actiu? 'actiu' : ''}"
+      onclick="${bloquejat? '' : `seleccionarNivell(${i})`}">
+      ${bloquejat? '🔒' : completat? '✅' : i}
     </div>`;
   }
   contenidor.innerHTML = html;
@@ -198,7 +199,7 @@ window.mostrarMemory = function() {
   contenidor.innerHTML = `<h3>🎮 Mini-joc</h3><p>Pròximament: Memory amb emojis</p>`;
 }
 
-// === TIPS amb Parlantito ===
+// === TIPS amb Parlantitos ===
 window.mostrarTips = function() {
   const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
@@ -217,9 +218,9 @@ window.mostrarTips = function() {
         </div>
         <p id="tip-text">${text}</p>
         <div class="lang-audio-buttons">
-          <button onclick="canviarLangTip('ca', this)" class="lang-btn ${langKey==='ca'?'active':''}">CA</button>
-          <button onclick="canviarLangTip('es', this)" class="lang-btn ${langKey==='es'?'active':''}">ES</button>
-          <button onclick="canviarLangTip('en', this)" class="lang-btn ${langKey==='en'?'active':''}">EN</button>
+          <button onclick="canviarLangTip('${tip.id}', 'ca', this)" class="lang-btn ${langKey==='ca'?'active':''}">CA</button>
+          <button onclick="canviarLangTip('${tip.id}', 'es', this)" class="lang-btn ${langKey==='es'?'active':''}">ES</button>
+          <button onclick="canviarLangTip('${tip.id}', 'en', this)" class="lang-btn ${langKey==='en'?'active':''}">EN</button>
         </div>
       </div>
     `;
@@ -227,29 +228,38 @@ window.mostrarTips = function() {
   contenidor.innerHTML = renderTip(langAudioActual) + `<button class="btn-nova" onclick="mostrarTips()">🔄 Nou Tip</button>`;
 }
 
-window.canviarLangTip = function(langKey, btn) {
+window.canviarLangTip = function(tipId, langKey, btn) {
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
-  const tips = TIPS_DATA[nivell].filter(t => t.categoria === categoria);
-  const tip = tips[Math.floor(Math.random() * tips.length)];
+  const tip = TIPS_DATA[nivell].find(t => t.id === tipId);
+  if (!tip) return;
   const text = tip[langKey].text;
   document.getElementById('tip-text').textContent = text;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const parent = btn.closest('.tip-card');
+  parent.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
-// === LECTURA: ara agafa només de LECTURA_CONTENT ===
+// === LECTURA: 100% separat de Diccionari i Frases ===
+// Agafa contingut només de LECTURA_CONTENT a lectura-content.js
 window.mostrarLectura = function() {
   const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
   const textos = LECTURA_CONTENT[nivell] || LECTURA_CONTENT[1];
+  if (!textos || textos.length === 0) {
+    contenidor.innerHTML = '<p>No hi ha lectures per aquest nivell encara.</p>';
+    return;
+  }
+  langAudioActual = idiomaActual.split('-')[0];
   let html = '<h3>📚 Lectures</h3>';
-  textos.slice(0,3).forEach((textObj, i) => {
+  textos.slice(0, 5).forEach((textObj, i) => {
+    const text = textObj[langAudioActual] || textObj.ca;
     html += `
       <div class="lectura-card" id="lectura-${i}">
-        <h4>Lectura ${i+1} - B${nivell}</h4>
-        <button onclick="parlarText('${textObj[langAudioActual].replace(/'/g,"\\'")}', '${langAudioActual}')" class="btn-audio">🔊 Escoltar</button>
-        <p class="lectura-text">${textObj[langAudioActual]}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h4>Lectura ${i+1} - B${nivell}</h4>
+          <button onclick="parlarText('${text.replace(/'/g,"\\'")}', '${langAudioActual}')" class="btn-audio">🔊</button>
+        </div>
+        <p class="lectura-text" id="lectura-text-${i}">${text}</p>
         <div class="lang-audio-buttons">
           <button onclick="canviarLangLectura(${i}, 'ca')" class="lang-btn ${langAudioActual==='ca'?'active':''}">CA</button>
           <button onclick="canviarLangLectura(${i}, 'es')" class="lang-btn ${langAudioActual==='es'?'active':''}">ES</button>
@@ -266,9 +276,12 @@ window.canviarLangLectura = function(index, langKey) {
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
   const textos = LECTURA_CONTENT[nivell] || LECTURA_CONTENT[1];
   const textObj = textos[index];
-  const card = document.getElementById(`lectura-${index}`);
-  card.querySelector('.lectura-text').textContent = textObj[langKey];
-  card.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  if (!textObj) return;
+  const text = textObj[langKey] || textObj.ca;
+  const card = document.getElementById(`lectura-text-${index}`);
+  if (card) card.textContent = text;
+  const parent = card.closest('.lectura-card');
+  parent.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
 }
 
@@ -290,12 +303,12 @@ window.mostrarBotiga = function() {
   packs.forEach(pack => {
     const comprat = estatJoc.packsComprats.includes(pack.id);
     html += `
-      <div class="pack-card ${comprat?'comprat':''}">
+      <div class="pack-card ${comprat? 'comprat' : ''}">
         <div class="puck">${pack.emoji}</div>
         <h4>${pack.nom}</h4>
         <p>${pack.preu} monedes</p>
-        <button ${comprat?'disabled':''} onclick="comprarPack('${pack.id}', ${pack.preu})">
-          ${comprat?'Comprat':'Comprar'}
+        <button ${comprat? 'disabled' : ''} onclick="comprarPack('${pack.id}', ${pack.preu})">
+          ${comprat? 'Comprat' : 'Comprar'}
         </button>
       </div>
     `;
