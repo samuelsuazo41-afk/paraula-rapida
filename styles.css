@@ -29,6 +29,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background 0.5s ease; /* NUEVO: transición suave al cambiar color */
 }
 
 header h1 {
