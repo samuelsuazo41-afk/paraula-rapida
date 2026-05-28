@@ -1,15 +1,16 @@
-// main.js - Paraula Ràpida v2.0
-// Integra emoji-data.js + frases-data.js + 2 mecàniques + Quiz Tips + Parlantito
+// main.js - Paraula Ràpida v2.2
+// Integra emoji-data.js + frases-data.js + tips-data.js + botiga-data.js + 2 mecàniques + Quiz Tips + Parlantito
 
-// === CONFIG PROGRÉS v2.0 ===
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v20')) || {
+// === CONFIG PROGRÉS v2.2 ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v22')) || {
   nivellActual: 1,
   nivellMaximDesbloquejat: 1,
   encerts: 0,
   fallades: 0,
   encertsEnAquestNivell: 0,
   record: 0,
-  monedes: 0
+  monedes: 0,
+  packsComprats: ["base"] // guarda els IDs dels packs comprats
 };
 
 let idiomaActual = 'ca-es'; // ca-es, ca-en, es-ca, en-ca
@@ -18,13 +19,6 @@ let fraseConstruida = [];
 let cartesVoltejades = [];
 let parellsTrobat = 0;
 let tipActual = null;
-
-// === Packs de Botiga ===
-const PACKS_BOTIGA = {
-  base: {nom: "Base B1", preu: 0},
-  cultura: {nom: "Cultura Catalana", preu: 500},
-  extensio: {nom: "Pack Extensió B2-B3", preu: 350}
-};
 
 // === SECCIÓ LECTURA NIVELLADA ===
 const NOTES_LECTURA = {
@@ -40,19 +34,6 @@ const NOTES_LECTURA = {
     {titol: "La Festa Major", text: "Ahir va ser la Festa Major del meu poble. Vam ballar sardanes, vam menjar pa amb tomàquet i vam escoltar música tradicional. Va ser una nit inoblidable."},
     {titol: "Un llibre interessant", text: "He llegit un llibre sobre la història de Catalunya. He après moltes coses sobre el segle XIX. L'autor explica molt bé els fets i recomano el llibre a tothom."}
   ]
-};
-
-// === TIPS AMB PARLANTITO CA/ES/EN ===
-const TIPS_DATA = {
- 1: {ca: {titol: "Article 'el/la'", text: "En català sempre posem l'article davant del nom: el gos, la casa."},
-      es: {titol: "Artículo 'el/la'", text: "En catalán siempre ponemos el artículo delante del nombre: el gos, la casa."},
-      en: {titol: "Article 'el/la'", text: "In Catalan we always use the article before the noun: el gos, la casa."}},
- 2: {ca: {titol: "Preposició 'a'", text: "'A' indica direcció o ubicació: Vaig a l'escola, Estic a casa."},
-      es: {titol: "Preposición 'a'", text: "'A' indica dirección o ubicación: Vaig a l'escola, Estic a casa."},
-      en: {titol: "Preposition 'a'", text: "'A' shows direction or location: Vaig a l'escola, Estic a casa."}},
- 3: {ca: {titol: "Verb 'estar' + adjectiu", text: "'Estar' descriu estats temporals: Estic content, Estàs cansat."},
-      es: {titol: "Verbo 'estar' + adjetivo", text: "'Estar' describe estados temporales: Estic content, Estàs cansat."},
-      en: {titol: "Verb 'estar' + adjective", text: "'Estar' describes temporary states: Estic content, Estàs cansat."}}
 };
 
 // === UTILITATS ===
@@ -89,11 +70,8 @@ window.novaFrase = function() {
   const grid = document.getElementById('grid-emojis');
   grid.innerHTML = '';
 
-  // Extreu els emojis de la resposta correcta
   const emojisCorrectes = cartaActual.text.match(/<span[^>]*>([^<]+)<\/span>/g)?.map(s => s.replace(/<[^>]+>/g,'')) || [];
-
-  // Afegeix distractors
-  const totsEmojis = Object.values(EMOJI_DATA.emojis.B1).flatMap(obj => Object.keys(obj));
+  const totsEmojis = getEmojisDesbloquejats();
   const distractors = totsEmojis.filter(e =>!emojisCorrectes.includes(e)).sort(() => 0.5 - Math.random()).slice(0, 6);
   const botones = [...emojisCorrectes,...distractors].sort(() => 0.5 - Math.random());
 
@@ -136,7 +114,6 @@ window.comprovarFrase = function() {
     estatJoc.monedes += 10;
     vibrar([20]);
 
-    // Passar a Mecànica 2
     setTimeout(() => {
       document.getElementById('mec1-container').style.display = 'none';
       document.getElementById('mec2-container').style.display = 'block';
@@ -145,7 +122,6 @@ window.comprovarFrase = function() {
       document.getElementById('feedback-mec2').innerHTML = '';
     }, 1500);
 
-    // Pujar nivell
     if (estatJoc.encertsEnAquestNivell >= 25) {
       if (estatJoc.nivellActual === estatJoc.nivellMaximDesbloquejat && estatJoc.nivellActual < 100) {
         estatJoc.nivellMaximDesbloquejat++;
@@ -168,16 +144,12 @@ window.comprovarFrase = function() {
 
 // === MECÀNICA 2: TRADUEIX ===
 window.comprovarTraduccio = function() {
-  const resposta = document.getElementById('input-traduccio').value.trim().toLowerCase();
   const feedback = document.getElementById('feedback-mec2');
-
-  // Aquí pots validar si vols, però de moment acceptem qualsevol cosa
   feedback.className = 'correcte';
   feedback.innerHTML = `✅ Molt bé!`;
   estatJoc.monedes += 5;
   guardarEstat();
   actualitzarUI();
-
   setTimeout(novaFrase, 1500);
 }
 
@@ -185,13 +157,15 @@ window.saltarMec2 = function() {
   novaFrase();
 }
 
-// === QUIZ TIPS - NOVA SECCIÓ CONTESTAR ===
+// === QUIZ TIPS - CONTESTAR v2.2 ===
 window.iniciarQuizTips = function() {
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  tipActual = TIPS_DATA[nivell] || TIPS_DATA[1];
+  const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
+  tipActual = getRandomTip(categoria, nivell);
 
   document.getElementById('quiz-tips-container').style.display = 'block';
-  document.getElementById('pregunta-tip').innerHTML = tipActual[idiomaActual.split('-')[0]].text;
+  const data = getTipTranslation(tipActual, idiomaActual);
+  document.getElementById('pregunta-tip').innerHTML = `Què diu el tip sobre "${data.titol}"?`;
   document.getElementById('input-resposta-tip').value = '';
   document.getElementById('feedback-tip').innerHTML = '';
 }
@@ -199,16 +173,17 @@ window.iniciarQuizTips = function() {
 window.parlarTip = function() {
   if (tipActual) {
     const lang = idiomaActual.split('-')[0];
-    parlarText(tipActual[lang].text, lang);
+    const data = getTipTranslation(tipActual, idiomaActual);
+    parlarText(data.text, lang);
   }
 }
 
 window.comprovarRespostaTip = function() {
-  const resposta = document.getElementById('input-resposta-tip').value.trim();
   const feedback = document.getElementById('feedback-tip');
+  const data = getTipTranslation(tipActual, idiomaActual);
 
   feedback.className = 'correcte';
-  feedback.innerHTML = `✅ Correcte! La resposta era: ${tipActual[idiomaActual.split('-')[0]].text}`;
+  feedback.innerHTML = `✅ Correcte! La resposta era: ${data.text}`;
   estatJoc.monedes += 3;
   guardarEstat();
   actualitzarUI();
@@ -218,18 +193,25 @@ window.saltarTip = function() {
   document.getElementById('quiz-tips-container').style.display = 'none';
 }
 
-// === BOTIGA ===
+// === BOTIGA v2.2 - PACKS DESBLOQUEJABLES ===
 window.mostrarBotiga = function() {
   const contenidor = document.getElementById('botiga-contenidor');
   let html = `<h3>🛒 Botiga - Monedes: ${estatJoc.monedes}</h3><div class="botiga-grid">`;
 
-  Object.entries(PACKS_BOTIGA).forEach(([id, pack]) => {
+  Object.values(PACKS_BOTIGA).forEach(pack => {
+    const estaComprat = estatJoc.packsComprats.includes(pack.id);
+    const puckEmoji = pack.emojis.length > 0? pack.emojis[0] : "📦";
+
     html += `
-      <div class="pack-card">
+      <div class="pack-card ${estaComprat? 'comprat' : ''}">
+        <div class="puck" style="font-size:48px;text-align:center;margin-bottom:8px;">${puckEmoji}</div>
         <h4>${pack.nom}</h4>
-        <button onclick="comprarPack('${id}')" ${estatJoc.monedes < pack.preu? 'disabled' : ''}>
-          ${pack.preu} monedes
-        </button>
+        ${estaComprat
+        ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
+          : `<button onclick="comprarPack('${pack.id}')" ${estatJoc.monedes < pack.preu? 'disabled' : ''}>
+               ${pack.preu} monedes
+             </button>`
+        }
       </div>`;
   });
   html += `</div>`;
@@ -238,41 +220,42 @@ window.mostrarBotiga = function() {
 
 window.comprarPack = function(id) {
   const pack = PACKS_BOTIGA[id];
-  if (estatJoc.monedes >= pack.preu) {
+  if (estatJoc.monedes >= pack.preu &&!estatJoc.packsComprats.includes(id)) {
     estatJoc.monedes -= pack.preu;
+    estatJoc.packsComprats.push(id);
     guardarEstat();
     mostrarBotiga();
     actualitzarUI();
   }
 }
 
-// === DICCIONARI ===
+// === DICCIONARI v2.2 - NOMÉS EMOJIS DESBLOQUEJATS ===
 window.mostrarDiccionari = function() {
   const contenidor = document.getElementById('gremi-contenidor');
-  let html = `<h3>📖 Diccionari d’Emojis</h3><div class="diccionari-grid">`;
+  const emojisDesbloquejats = getEmojisDesbloquejats();
 
-  const tots = Object.values(EMOJI_DATA.emojis.B1).flatMap(obj => Object.keys(obj));
-  [...new Set(tots)].slice(0, 50).forEach(emoji => {
+  let html = `<h3>📖 Diccionari d’Emojis</h3><div class="diccionari-grid">`;
+  emojisDesbloquejats.slice(0, 100).forEach(emoji => {
     html += `<div class="emoji-item">${emoji}</div>`;
   });
   html += `</div>`;
   contenidor.innerHTML = html;
 }
 
-// === TIPS ===
+// === TIPS v2.2 - USA tips-data.js EXTERN ===
 window.mostrarTips = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const tip = TIPS_DATA[nivell] || TIPS_DATA[1];
-  const lang = idiomaActual.split('-')[0];
-  const data = tip[lang];
+  const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
+  const tip = getRandomTip(categoria, nivell);
+  const data = getTipTranslation(tip, idiomaActual);
 
   contenidor.innerHTML = `
     <div id="tips-container">
       <div class="tip-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <h3>${data.titol}</h3>
-          <button onclick="parlarText('${data.text.replace(/'/g, "\\'")}', '${lang}')" class="btn-audio">🔊</button>
+          <button onclick="parlarText('${data.text.replace(/'/g, "\\'")}', '${idiomaActual.split('-')[0]}')" class="btn-audio">🔊</button>
         </div>
         <p style="color:var(--text-sec);line-height:1.6;">${data.text}</p>
       </div>
@@ -313,7 +296,7 @@ window.mostrarLectura = function() {
 // === MEMORY ===
 window.iniciarMemory = function() {
   const contenidor = document.getElementById('gremi-contenidor');
-  const totsEmojis = Object.values(EMOJI_DATA.emojis.B1).flatMap(obj => Object.keys(obj));
+  const totsEmojis = getEmojisDesbloquejats();
   const parells = totsEmojis.sort(() => 0.5 - Math.random()).slice(0, 6);
   const cartes = [...parells,...parells].sort(() => 0.5 - Math.random());
 
@@ -363,7 +346,7 @@ window.voltearCarta = function(card) {
 
 // === UI I NAVEGACIÓ ===
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v20', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v22', JSON.stringify(estatJoc));
 }
 
 function actualitzarUI() {
