@@ -24,6 +24,12 @@
 <header id="app-header">
   <h1 id="app-titol">Paraula Ràpida</h1>
   <div id="nivell-actual">Nivell 1 - B1 | Progrés: 0/25</div>
+  <select id="idioma-select">
+    <option value="ca-es">Català → Espanyol</option>
+    <option value="ca-en">Català → English</option>
+    <option value="es-ca">Espanyol → Català</option>
+    <option value="en-ca">English → Català</option>
+  </select>
 </header>
 
 <div class="stats-bar">
@@ -43,15 +49,32 @@
     <div id="mapa-nivells"></div>
   </div>
 
-  <!-- Tab Missio = Joc: MECÀNICA 1 ARMA LA FRASE -->
+  <!-- Tab Missio = Joc: MECÀNICA 1 ARMA LA FRASE + MECÀNICA 2 TRADUEIX -->
   <div id="tab-missio" class="tab-content">
     <div id="minijoc-container">
       <h3 id="minijoc-titol">Nivell 1</h3>
-      <div id="frase-objectiu"></div>
-      <div id="frase-construida"></div>
-      <div id="grid-emojis"></div>
-      <button class="btn-encert" onclick="comprovarFrase()">Comprovar</button>
-      <div id="minijoc-feedback"></div>
+      
+      <!-- MECÀNICA 1: Arma la frase -->
+      <div id="mec1-container">
+        <p id="instruccio-mec1">Arma la frase correcta:</p>
+        <div id="frase-objectiu"></div>
+        <div id="frase-construida"></div>
+        <div id="grid-emojis"></div>
+        <button class="btn-encert" onclick="comprovarFrase()">Comprovar</button>
+        <div id="minijoc-feedback"></div>
+      </div>
+
+      <!-- MECÀNICA 2: Tradueix -->
+      <div id="mec2-container" style="display:none">
+        <p id="instruccio-mec2">Tradueix la frase:</p>
+        <div id="frase-a-traduir"></div>
+        <input type="text" id="input-traduccio" placeholder="Escriu la traducció...">
+        <button class="btn-encert" onclick="comprovarTraduccio()">Comprovar</button>
+        <button class="btn-secundari" onclick="saltarMec2()">Saltar</button>
+        <div id="feedback-mec2"></div>
+      </div>
+
+      <button class="btn-nova" onclick="novaFrase()">Nova frase</button>
     </div>
   </div>
 
@@ -105,6 +128,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- ORDEN CRÍTICO: datos antes que lógica -->
 <script src="./emoji-data.js"></script>
+<script src="./frases-data.js"></script>
 <script src="./main.js"></script>
 
 </body>
