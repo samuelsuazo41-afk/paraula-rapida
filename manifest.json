@@ -33,8 +33,8 @@
     {
       "name": "Jugar ara",
       "short_name": "Jugar",
-      "description": "Entra directe al nivell actiu",
-      "url": "./index.html#tab-missio",
+      "description": "Entra directe al Mini-Joc",
+      "url": "./index.html",
       "icons": [
         {
           "src": "./icon-96.png",
@@ -57,7 +57,7 @@
     {
       "name": "Gremi",
       "short_name": "Gremi",
-      "description": "Diccionari, Tips i Lectures",
+      "description": "Diccionari, Tips i Mini-Joc",
       "url": "./index.html#tab-gremi",
       "icons": [
         {
