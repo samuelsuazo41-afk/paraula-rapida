@@ -194,7 +194,8 @@ header h1 {
   cursor: not-allowed;
 }
 
-#input-traduccio {
+#input-traduccio,
+#input-resposta-tip {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
@@ -206,7 +207,8 @@ header h1 {
   text-align: center;
 }
 
-#input-traduccio:focus {
+#input-traduccio:focus,
+#input-resposta-tip:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -265,6 +267,11 @@ header h1 {
   font-weight: 700;
   cursor: pointer;
   margin-top: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-audio:active {
+  transform: scale(0.95);
 }
 
 #minijoc-feedback,
@@ -373,7 +380,7 @@ header h1 {
   color: white;
 }
 
-/* === TIPS + QUIZ CONTSTAR + LECTURA === */
+/* === TIPS + QUIZ CONTESTAR + LECTURA === */
 #tips-container {
   max-width: 100%;
 }
@@ -386,6 +393,11 @@ header h1 {
   padding: 20px;
   margin-bottom: 15px;
   text-align: left;
+}
+
+.tip-card h3 {
+  font-size: 18px;
+  color: var(--text);
 }
 
 .lectura-card h4 {
@@ -404,18 +416,6 @@ header h1 {
   font-size: 18px;
   margin-bottom: 12px;
   line-height: 1.6;
-}
-
-#input-resposta-tip {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: 2px solid #333;
-  background: #222;
-  color: var(--text);
-  font-size: 16px;
-  margin-bottom: 12px;
-  text-align: center;
 }
 
 /* === MINI-JOC MEMORY === */
@@ -476,12 +476,7 @@ header h1 {
   justify-content: center;
 }
 
-.emoji-item.bloquejat {
-  opacity: 0.3;
-  background: #111;
-}
-
-/* === BOTIGA === */
+/* === BOTIGA v2.2 === */
 .botiga-grid {
   display: grid;
   gap: 12px;
@@ -493,6 +488,7 @@ header h1 {
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s ease;
+  text-align: center;
 }
 
 .pack-card.comprat {
@@ -500,31 +496,33 @@ header h1 {
   background: rgba(76, 175, 80, 0.1);
 }
 
-.pack-card.bloquejat {
-  opacity: 0.6;
-}
-
 .pack-card h4 {
   font-size: 16px;
-  margin-bottom: 8px;
+  margin: 8px 0;
   color: var(--text);
 }
 
-.pack-card p {
-  font-size: 24px;
-  margin-bottom: 12px;
-  letter-spacing: 4px;
+.puck {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(255,107,53,0.3));
 }
 
 .pack-card button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: white;
   font-weight: 700;
   cursor: pointer;
+  font-size: 15px;
+  transition: transform 0.2s ease;
+}
+
+.pack-card button:active {
+  transform: scale(0.98);
 }
 
 .pack-card button:disabled {
@@ -572,5 +570,8 @@ header h1 {
   }
   .diccionari-grid {
     grid-template-columns: repeat(5, 1fr);
+  }
+  #grid-emojis {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
