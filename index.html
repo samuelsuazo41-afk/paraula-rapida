@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- Iconos -->
+<!-- Icones -->
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
@@ -94,25 +94,6 @@
     <div id="botiga-contenidor"></div>
   </div>
 
-</div>
-
-<nav class="bottom-nav">
-  <div class="nav-item active" onclick="canviarTab('mapa', event)">
-    <span class="nav-icon">🗺️</span>
-    <span>Nivells</span>
-  </div>
-  <div class="nav-item" onclick="canviarTab('missio', event)">
-    <span class="nav-icon">🎯</span>
-    <span>Jugar</span>
-  </div>
-  <div class="nav-item" onclick="canviarTab('gremi', event)">
-    <span class="nav-icon">📚</span>
-    <span>Biblioteca</span>
-  </div>
-  <div class="nav-item" onclick="canviarTab('botiga', event)">
-    <span class="nav-icon">🛒</span>
-    <span>Botiga</span>
-  </div>
 </nav>
 
 <script>
@@ -126,9 +107,11 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- ORDEN CRÍTICO: datos antes que lógica -->
+<!-- ORDRE CRÍTIC: dades abans que lògica -->
 <script src="./emoji-data.js"></script>
 <script src="./frases-data.js"></script>
+<script src="./tips-data.js"></script>
+<script src="./botiga-data.js"></script>
 <script src="./main.js"></script>
 
 </body>
