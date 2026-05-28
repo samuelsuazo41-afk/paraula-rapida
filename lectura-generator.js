@@ -152,4 +152,4 @@ function generarTextLectura(nivell, lang = 'ca') {
     if (banc[key]) return banc[key][Math.floor(Math.random()*banc[key].length)];
     return match;
   });
-}
+} 
