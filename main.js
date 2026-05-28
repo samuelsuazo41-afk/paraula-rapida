@@ -1,6 +1,6 @@
-// main.js v2.9 - Paraula Ràpida complet amb fixes Gremi + Timer + Quiz Tips
+// main.js v2.8 - Paraula Ràpida simplificat, sense quiz a Tips
 
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v29')) || {
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v28')) || {
   nivellActual: 1,
   monedes: 20,
   xp: 0,
@@ -14,10 +14,9 @@ let idiomaActual = estatJoc.idiomaActual;
 let fraseActual = null;
 let emojiSeleccionats = [];
 let memoryInterval = null;
-let tipActual = null;
 
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v29', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v28', JSON.stringify(estatJoc));
 }
 
 function getDificultatPerNivell(nivell) {
@@ -73,7 +72,7 @@ function mostrarTab(tab) {
   if (tab === 'mapa') mostrarMapa();
 }
 
-// === MECÀNICA 1: FRSE EMOJI ===
+// === MECÀNICA 1 ===
 window.iniciarMec1 = function() {
   const contenidor = document.getElementById('minijoc-container');
   fraseActual = getRandomFrase(estatJoc.nivellActual);
@@ -166,7 +165,7 @@ window.comprovarMec2 = function(respostaCorrecta) {
   }
 }
 
-// === GREMI AMB SUB-TABS ===
+// === GREMI AMB SUB-TABS - FIX CLAU AQUÍ ===
 window.mostrarGremi = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   contenidor.innerHTML = `
@@ -183,7 +182,7 @@ window.mostrarGremi = function() {
 
 window.mostrarSubTab = function(tab, btn) {
   document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  btn.classList.add('active'); // ✅ Ara usa btn, no event
 
   if (window.memoryInterval) {
     clearInterval(window.memoryInterval);
@@ -272,17 +271,17 @@ function voltejarCarta(card) {
   }
 }
 
-// === TIPS ===
+// === TIPS SIMPLIFICAT ===
 window.mostrarTips = function() {
   const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
   const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
-  tipActual = getRandomTip(categoria, nivell);
-  const data = getTipTranslation(tipActual, idiomaActual);
+  const tip = getRandomTip(categoria, nivell);
+  const data = getTipTranslation(tip, idiomaActual);
 
-  const textCA = tipActual.ca.text.replace(/'/g, "\\'");
-  const textES = tipActual.es.text.replace(/'/g, "\\'");
-  const textEN = tipActual.en.text.replace(/'/g, "\\'");
+  const textCA = tip.ca.text.replace(/'/g, "\\'");
+  const textES = tip.es.text.replace(/'/g, "\\'");
+  const textEN = tip.en.text.replace(/'/g, "\\'");
 
   contenidor.innerHTML = `
     <div id="tips-container">
@@ -298,15 +297,7 @@ window.mostrarTips = function() {
           <button onclick="parlarText('${textEN}', 'en'); canviarTextTip('${textEN}')" class="lang-btn">EN</button>
         </div>
       </div>
-      <button class="btn-encert" onclick="iniciarQuizTips()">🧠 Contestar</button>
-      <div id="quiz-tips-container" style="display:none">
-        <p id="pregunta-tip"></p>
-        <input type="text" id="input-resposta-tip" placeholder="Escriu la resposta...">
-        <button class="btn-encert" onclick="comprovarRespostaTip()">Comprovar</button>
-        <button class="btn-secundari" onclick="saltarTip()">Saltar</button>
-        <button class="btn-audio" onclick="parlarTip()">🔊 Parlantito</button>
-        <div id="feedback-tip"></div>
-      </div>
+      <button class="btn-nova" onclick="mostrarTips()">🔄 Nou Tip</button>
     </div>
   `;
 }
@@ -315,37 +306,6 @@ window.canviarTextTip = function(nouText) {
   document.getElementById('tip-text').textContent = nouText;
   document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
   event.currentTarget.classList.add('active');
-}
-
-window.iniciarQuizTips = function() {
-  document.getElementById('quiz-tips-container').style.display = 'block';
-  const data = getTipTranslation(tipActual, idiomaActual);
-  document.getElementById('pregunta-tip').textContent = `Què vol dir aquest tip? ${data.titol}`;
-}
-
-window.comprovarRespostaTip = function() {
-  const input = document.getElementById('input-resposta-tip').value.toLowerCase().trim();
-  const feedback = document.getElementById('feedback-tip');
-  const resposta = tipActual[idiomaActual.split('-')[0]].text.toLowerCase();
-  if (input.includes(resposta.slice(0,10))) {
-    feedback.className = 'correcte';
-    feedback.textContent = '✅ Correcte!';
-    estatJoc.xp += 5;
-    guardarEstat();
-    actualitzarUI();
-  } else {
-    feedback.className = 'incorrecte';
-    feedback.textContent = `❌ Pista: ${resposta.slice(0,30)}...`;
-  }
-}
-
-window.saltarTip = function() {
-  mostrarTips();
-}
-
-window.parlarTip = function() {
-  const data = getTipTranslation(tipActual, idiomaActual);
-  parlarText(data.text, idiomaActual.split('-')[0]);
 }
 
 // === LECTURA ===
@@ -368,7 +328,7 @@ window.mostrarLectura = function() {
   contenidor.innerHTML = html;
 }
 
-// === MAPA 100 NIVELLS ===
+// === MAPA ===
 window.mostrarMapa = function() {
   const contenidor = document.getElementById('mapa-contenidor');
   let html = '<div id="mapa-nivells">';
