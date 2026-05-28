@@ -1,8 +1,8 @@
-// main.js - Paraula Ràpida v2.3
-// Arreglat: getEmojisDesbloquejats + crides inicials + protecció nulls
+// main.js - Paraula Ràpida v2.4
+// Inclou generarFrase fallback + proteccions nulls
 
-// === CONFIG PROGRÉS v2.3 ===
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v23')) || {
+// === CONFIG PROGRÉS v2.4 ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v24')) || {
   nivellActual: 1,
   nivellMaximDesbloquejat: 1,
   encerts: 0,
@@ -22,6 +22,7 @@ let tipActual = null;
 
 // === UTILITATS BOTIGA ===
 function getEmojisDesbloquejats() {
+  if (typeof PACKS_BOTIGA === 'undefined') return ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼"];
   let emojis = [];
   estatJoc.packsComprats.forEach(id => {
     if (PACKS_BOTIGA[id] && PACKS_BOTIGA[id].emojis) {
@@ -42,10 +43,24 @@ const NOTES_LECTURA = {
     {titol: "La meva feina", text: "Treballo en una biblioteca. M'agrada ajudar la gent a trobar llibres. Cada dia llegeixo una mica i aprenc coses noves."}
   ],
  3: [
-    {titol: "La Festa Major", text: "Ahir va ser la Festa Major del meu poble. Vam ballar sardanes, vam menjar pa amb tomàquet i vam escoltar música tradicional. Va ser una nit inoblidable."},
+    {titol: "La Festa Major", text: "Ahir va ser la Festa Major del meu poble. Vam ballar sardanes, vam menjar pa amb tomàquet i vam escoltar música tradicional. Va va ser una nit inoblidable."},
     {titol: "Un llibre interessant", text: "He llegit un llibre sobre la història de Catalunya. He après moltes coses sobre el segle XIX. L'autor explica molt bé els fets i recomano el llibre a tothom."}
   ]
 };
+
+// === GENERAR FRASE - FALLBACK SI NO EXISTEIX FRASES-DATA ===
+function generarFrase(nivell) {
+  if (typeof FRSES_DATA!== 'undefined' && typeof generarFraseExterna === 'function') {
+    return generarFraseExterna(nivell);
+  }
+  // Fallback bàsic per no petar
+  const frasesFallback = [
+    {text: "Hola <span class='emoji'>👋</span> com <span class='emoji'>❓</span> estàs <span class='emoji'>😊</span>"},
+    {text: "Jo <span class='emoji'>❤️</span> el <span class='emoji'>🐱</span> i el <span class='emoji'>🐶</span>"},
+    {text: "Vaig a <span class='emoji'>🏫</span> amb el <span class='emoji'>🚌</span>"}
+  ];
+  return frasesFallback[Math.floor(Math.random() * frasesFallback.length)];
+}
 
 // === UTILITATS ===
 function getDificultatPerNivell(nivell) {
@@ -206,6 +221,10 @@ window.saltarTip = function() {
 // === BOTIGA ===
 window.mostrarBotiga = function() {
   const contenidor = document.getElementById('botiga-contenidor');
+  if (typeof PACKS_BOTIGA === 'undefined') {
+    contenidor.innerHTML = '<p>Carregant botiga...</p>';
+    return;
+  }
   let html = `<h3>🛒 Botiga - Monedes: ${estatJoc.monedes}</h3><div class="botiga-grid">`;
 
   Object.values(PACKS_BOTIGA).forEach(pack => {
@@ -217,7 +236,7 @@ window.mostrarBotiga = function() {
         <div class="puck" style="font-size:48px;text-align:center;margin-bottom:8px;">${puckEmoji}</div>
         <h4>${pack.nom}</h4>
         ${estaComprat
-       ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
+         ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
           : `<button onclick="comprarPack('${pack.id}')" ${estatJoc.monedes < pack.preu? 'disabled' : ''}>
                ${pack.preu} monedes
              </button>`
@@ -356,7 +375,7 @@ window.voltearCarta = function(card) {
 
 // === UI I NAVEGACIÓ ===
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v23', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v24', JSON.stringify(estatJoc));
 }
 
 function actualitzarUI() {
