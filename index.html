@@ -12,32 +12,16 @@
   <div id="app">
     <!-- HEADER -->
     <header class="app-header">
-      <h1>Paraula Ràpida</h1>
+      <h1 id="app-titol">Paraula Ràpida</h1>
       <div class="header-controls">
-        <span id="nivell-actual">Nivell 1 - B1</span>
-        <select id="idioma-select">
-          <option value="ca-es">Català</option>
-          <option value="es-es">Español</option>
-          <option value="en-us">English</option>
+        <div id="coins" class="coins-display">🪙 50 <span id="text-monedes">Monedes</span></div>
+        <select id="idioma-select" onchange="canviarIdioma(this.value)">
+          <option value="ca">Català</option>
+          <option value="es">Español</option>
+          <option value="en">English</option>
         </select>
       </div>
     </header>
-
-    <!-- STATS BAR -->
-    <div class="stats-bar">
-      <div class="stat-item">
-        <span class="stat-label">Rècord</span>
-        <span class="stat-value" id="record">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Monedes</span>
-        <span class="stat-value" id="monedes">20</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">XP</span>
-        <span class="stat-value" id="xp">0</span>
-      </div>
-    </div>
 
     <!-- CONTENIDO TABS -->
     <main class="tab-content-container">
@@ -48,41 +32,42 @@
         <div id="mapa-nivells" class="mapa-grid"></div>
       </section>
 
-      <!-- TAB JUGAR -->
+      <!-- TAB MISSIO/JUGAR -->
       <section id="tab-missio" class="tab-content">
         <div id="minijoc-container"></div>
       </section>
 
       <!-- TAB GREMI -->
       <section id="tab-gremi" class="tab-content">
-        <div id="gremi-contenidor"></div>
+        <!-- Subtabs para Gremi -->
+        <div class="sub-tabs" id="biblioteca-subtabs" style="display:none;">
+          <button class="sub-tab-btn active" onclick="mostrarBibliotecaTab('diccionari', event)">Diccionari</button>
+          <button class="sub-tab-btn" onclick="mostrarBibliotecaTab('tips', event)">Tips</button>
+        </div>
+        <div id="gremi-contenidor" class="gremi-grid"></div>
       </section>
 
       <!-- TAB BOTIGA -->
       <section id="tab-botiga" class="tab-content">
         <h2>Botiga de Packs</h2>
-        <div id="botiga-contenidor"></div>
+        <div id="botiga-contenidor" class="botiga-grid"></div>
       </section>
 
     </main>
 
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
-      <button class="nav-item active" onclick="mostrarTab('mapa')">
+      <button class="nav-item active" onclick="canviarTab('mapa', event)">
         <span class="nav-icon">🗺️</span>
-        <span class="nav-label">Mapa</span>
+        <span class="nav-label" id="tab-mapa-txt">Mapa</span>
       </button>
-      <button class="nav-item" onclick="mostrarTab('missio')">
-        <span class="nav-icon">🎮</span>
-        <span class="nav-label">Jugar</span>
-      </button>
-      <button class="nav-item" onclick="mostrarTab('gremi')">
+      <button class="nav-item" onclick="canviarTab('gremi', event)">
         <span class="nav-icon">📚</span>
-        <span class="nav-label">Gremi</span>
+        <span class="nav-label" id="tab-gremi-txt">Gremi</span>
       </button>
-      <button class="nav-item" onclick="mostrarTab('botiga')">
+      <button class="nav-item" onclick="canviarTab('botiga', event)">
         <span class="nav-icon">🛒</span>
-        <span class="nav-label">Botiga</span>
+        <span class="nav-label" id="tab-botiga-txt">Botiga</span>
       </button>
     </nav>
   </div>
