@@ -1,6 +1,6 @@
-// main.js v2.8 - Paraula Ràpida simplificat, sense quiz a Tips
+// main.js v2.9 - Paraula Ràpida simplificat + hash shortcuts
 
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v28')) || {
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v29')) || {
   nivellActual: 1,
   monedes: 20,
   xp: 0,
@@ -16,7 +16,7 @@ let emojiSeleccionats = [];
 let memoryInterval = null;
 
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v28', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v29', JSON.stringify(estatJoc));
 }
 
 function getDificultatPerNivell(nivell) {
@@ -165,7 +165,7 @@ window.comprovarMec2 = function(respostaCorrecta) {
   }
 }
 
-// === GREMI AMB SUB-TABS - FIX CLAU AQUÍ ===
+// === GREMI ===
 window.mostrarGremi = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   contenidor.innerHTML = `
@@ -182,7 +182,7 @@ window.mostrarGremi = function() {
 
 window.mostrarSubTab = function(tab, btn) {
   document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active'); // ✅ Ara usa btn, no event
+  btn.classList.add('active');
 
   if (window.memoryInterval) {
     clearInterval(window.memoryInterval);
@@ -330,18 +330,16 @@ window.mostrarLectura = function() {
 
 // === MAPA ===
 window.mostrarMapa = function() {
-  const contenidor = document.getElementById('mapa-contenidor');
-  let html = '<div id="mapa-nivells">';
+  const contenidor = document.getElementById('mapa-nivells');
+  let html = '';
   for (let i = 1; i <= 100; i++) {
     const bloquejat = i > estatJoc.nivellActual + 1;
     const completat = i < estatJoc.nivellActual;
     const actiu = i === estatJoc.nivellActual;
     html += `<div class="nivell-btn ${bloquejat?'bloquejat':''} ${completat?'completat':''} ${actiu?'actiu':''}" onclick="${bloquejat?'':`seleccionarNivell(${i})`}">
       ${bloquejat?'🔒':completat?'✅':i}
-      ${!bloquejat &&!completat?i:''}
     </div>`;
   }
-  html += '</div>';
   contenidor.innerHTML = html;
 }
 
@@ -399,6 +397,16 @@ document.getElementById('idioma-select').addEventListener('change', (e) => {
   iniciarMec1();
 });
 
+// === HASH SHORTCUTS DEL MANIFEST ===
+function activarTabPerHash() {
+  const hash = window.location.hash.replace('#', '');
+  if (hash === 'tab-missio') mostrarTab('missio');
+  else if (hash === 'tab-botiga') mostrarTab('botiga');
+  else if (hash === 'tab-mapa') mostrarTab('mapa');
+  else if (hash === 'tab-gremi') mostrarTab('gremi');
+}
+
 // === INIT ===
+activarTabPerHash();
 actualitzarUI();
-iniciarMec1();
+if (!window.location.hash) iniciarMec1();
