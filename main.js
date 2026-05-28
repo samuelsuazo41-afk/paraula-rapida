@@ -1,6 +1,6 @@
-// main.js v2.9 - Paraula Ràpida simplificat + hash shortcuts
+// main.js v2.11 - Paraula Ràpida simplificat + hash shortcuts
 
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v29')) || {
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v30')) || {
   nivellActual: 1,
   monedes: 20,
   xp: 0,
