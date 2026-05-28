@@ -1,21 +1,22 @@
-// main.js v3.3 - Paraula Ràpida
-// lectura-content.js ha d’estar carregat abans que aquest fitxer
+// main.js v2.7 - Paraula Ràpida complet amb fixes Gremi + Timer
 
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v33')) || {
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v27')) || {
   nivellActual: 1,
   monedes: 20,
   xp: 0,
-  idiomaActual: 'ca-es',
-  packsComprats: []
+  recordRacha: 0,
+  packsComprats: [],
+  memoryParells: 0,
+  idiomaActual: 'ca-es'
 };
 
 let idiomaActual = estatJoc.idiomaActual;
 let fraseActual = null;
 let emojiSeleccionats = [];
-let langAudioActual = 'ca';
+let memoryInterval = null;
 
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v33', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v27', JSON.stringify(estatJoc));
 }
 
 function getDificultatPerNivell(nivell) {
@@ -24,35 +25,34 @@ function getDificultatPerNivell(nivell) {
   return 3;
 }
 
-function getEmojisDesbloquejats(nivell) {
+function getEmojisPerNivell(nivell) {
   const dif = getDificultatPerNivell(nivell);
-  let base = EMOJI_DATA.filter(e => e.nivell <= dif);
-  estatJoc.packsComprats.forEach(packId => {
-    const pack = BOTIGA_PACKS.find(p => p.id === packId);
-    if (pack && pack.emojis) base = base.concat(pack.emojis);
-  });
-  return [...new Map(base.map(e => [e.emoji, e])).values()];
+  const base = EMOJI_DATA.filter(e => e.nivell <= dif);
+  return base.sort(() => Math.random() - 0.5).slice(0, 8);
 }
 
 function getRandomFrase(nivell) {
   const dif = getDificultatPerNivell(nivell);
   const frases = FRASES_DATA[dif] || [];
-  const emojisDisp = getEmojisDesbloquejats(nivell).map(e => e.emoji);
-  const disponibles = frases.filter(f => f.emojis.every(em => emojisDisp.includes(em)));
-  return disponibles.length > 0? disponibles[Math.floor(Math.random() * disponibles.length)] : frases[0];
+  return frases[Math.floor(Math.random() * frases.length)];
 }
 
-function getTextEnIdioma(obj, lang) {
-  const key = lang.split('-')[0];
-  return obj[key] || obj.ca;
+function getRandomTip(categoria, nivell) {
+  const tips = TIPS_DATA[nivell].filter(t => t.categoria === categoria);
+  return tips[Math.floor(Math.random() * tips.length)];
 }
 
-function parlarText(text, langKey) {
+function getTipTranslation(tip, lang) {
+  const langKey = lang.split('-')[0];
+  return { titol: tip[langKey].titol, text: tip[langKey].text };
+}
+
+function parlarText(text, lang) {
   if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    if (langKey === 'ca') utterance.lang = 'ca-ES';
-    else if (langKey === 'es') utterance.lang = 'es-ES';
+    if (lang === 'ca') utterance.lang = 'ca-ES';
+    else if (lang === 'es') utterance.lang = 'es-ES';
     else utterance.lang = 'en-US';
     utterance.rate = 0.9;
     speechSynthesis.speak(utterance);
@@ -65,96 +65,106 @@ function mostrarTab(tab) {
   document.getElementById(`tab-${tab}`).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   event.currentTarget.classList.add('active');
-  if (tab === 'missio') iniciarJoc();
+
+  if (tab === 'missio') iniciarMec1();
   if (tab === 'gremi') mostrarGremi();
   if (tab === 'botiga') mostrarBotiga();
   if (tab === 'mapa') mostrarMapa();
 }
 
-// === JOC ===
-window.iniciarJoc = function() {
+// === MECÀNICA 1: FRSE EMOJI ===
+window.iniciarMec1 = function() {
   const contenidor = document.getElementById('minijoc-container');
   fraseActual = getRandomFrase(estatJoc.nivellActual);
   emojiSeleccionats = [];
+
   contenidor.innerHTML = `
-    <div id="minijoc-titol">Nivell ${estatJoc.nivellActual} - B${getDificultatPerNivell(estatJoc.nivellActual)}</div>
+    <div id="minijoc-titol">Mecànica 1: Construeix la frase</div>
+    <div id="instruccio-mec1">Clica els emojis en ordre per formar: "${fraseActual.ca}"</div>
     <div id="frase-objectiu">${fraseActual.ca}</div>
     <div id="frase-construida"></div>
     <div id="grid-emojis"></div>
-    <button class="btn-encert" onclick="comprovarFrase()">Comprovar</button>
+    <button class="btn-encert" onclick="comprovarMec1()">Comprovar</button>
     <div id="minijoc-feedback"></div>
+    <button class="btn-nova" onclick="iniciarMec2()">➡️ Passar a Mecànica 2</button>
   `;
+
   const grid = document.getElementById('grid-emojis');
-  const emojis = [...fraseActual.emojis].sort(() => Math.random() - 0.5);
-  emojis.forEach((emoji) => {
+  const emojis = fraseActual.emojis.sort(() => Math.random() - 0.5);
+  emojis.forEach((emoji, idx) => {
     const btn = document.createElement('button');
     btn.className = 'emoji-btn';
     btn.textContent = emoji;
-    btn.onclick = () => afegirEmoji(emoji, btn);
+    btn.onclick = () => afegirEmoji(emoji, idx, btn);
     grid.appendChild(btn);
   });
 }
 
-function afegirEmoji(emoji, btn) {
+function afegirEmoji(emoji, idx, btn) {
   if (btn.disabled) return;
   emojiSeleccionats.push(emoji);
   btn.disabled = true;
   const slot = document.createElement('span');
   slot.className = 'emoji-slot';
   slot.textContent = emoji;
-  slot.onclick = () => {
-    emojiSeleccionats = emojiSeleccionats.filter(e => e!== emoji);
-    btn.disabled = false;
-    slot.remove();
-  };
+  slot.onclick = () => treureEmoji(emoji, idx, btn, slot);
   document.getElementById('frase-construida').appendChild(slot);
 }
 
-window.comprovarFrase = function() {
+function treureEmoji(emoji, idx, btn, slot) {
+  emojiSeleccionats = emojiSeleccionats.filter(e => e!== emoji);
+  btn.disabled = false;
+  slot.remove();
+}
+
+window.comprovarMec1 = function() {
   const feedback = document.getElementById('minijoc-feedback');
   const correcte = JSON.stringify(emojiSeleccionats) === JSON.stringify(fraseActual.emojis);
   if (correcte) {
     feedback.className = 'correcte';
     feedback.innerHTML = `✅ Correcte! <div class="gramatica">${fraseActual.gramatica}</div>`;
     estatJoc.xp += 10;
-    estatJoc.monedes += 5;
-    estatJoc.nivellActual++;
+    estatJoc.recordRacha++;
     guardarEstat();
     actualitzarUI();
-    setTimeout(() => mostrarTab('mapa'), 1500);
   } else {
     feedback.className = 'incorrecte';
-    feedback.innerHTML = `❌ Prova de nou. Ordre: ${fraseActual.emojis.join(' ')}`;
-    emojiSeleccionats = [];
-    document.getElementById('frase-construida').innerHTML = '';
-    document.querySelectorAll('.emoji-btn').forEach(b => b.disabled = false);
+    feedback.innerHTML = `❌ Prova de nou. Ordre correcte: ${fraseActual.emojis.join(' ')}`;
+    estatJoc.recordRacha = 0;
   }
 }
 
-// === MAPA ===
-window.mostrarMapa = function() {
-  const contenidor = document.getElementById('mapa-nivells');
-  let html = '';
-  for (let i = 1; i <= 100; i++) {
-    const bloquejat = i > estatJoc.nivellActual;
-    const completat = i < estatJoc.nivellActual;
-    const actiu = i === estatJoc.nivellActual;
-    html += `<div class="nivell-btn ${bloquejat? 'bloquejat' : ''} ${completat? 'completat' : ''} ${actiu? 'actiu' : ''}"
-      onclick="${bloquejat? '' : `seleccionarNivell(${i})`}">
-      ${bloquejat? '🔒' : completat? '✅' : i}
-    </div>`;
+window.iniciarMec2 = function() {
+  const contenidor = document.getElementById('minijoc-container');
+  const frase = getRandomFrase(estatJoc.nivellActual);
+  contenidor.innerHTML = `
+    <div id="minijoc-titol">Mecànica 2: Traducció</div>
+    <div id="instruccio-mec2">Escriu en ${idiomaActual.split('-')[1]}:</div>
+    <div id="frase-a-traduir">${frase.ca}</div>
+    <input type="text" id="input-traduccio" placeholder="La teva traducció...">
+    <button class="btn-encert" onclick="comprovarMec2('${frase[idiomaActual.split('-')[1]]}')">Comprovar</button>
+    <div id="feedback-mec2"></div>
+    <button class="btn-nova" onclick="iniciarMec1()">⬅️ Tornar a Mecànica 1</button>
+  `;
+}
+
+window.comprovarMec2 = function(respostaCorrecta) {
+  const input = document.getElementById('input-traduccio').value.toLowerCase().trim();
+  const feedback = document.getElementById('feedback-mec2');
+  const correcte = input === respostaCorrecta.toLowerCase();
+  if (correcte) {
+    feedback.className = 'correcte';
+    feedback.textContent = '✅ Molt bé!';
+    estatJoc.monedes += 5;
+    guardarEstat();
+    actualitzarUI();
+  } else {
+    feedback.className = 'incorrecte';
+    feedback.textContent = `❌ La resposta era: ${respostaCorrecta}`;
   }
-  contenidor.innerHTML = html;
 }
 
-window.seleccionarNivell = function(nivell) {
-  estatJoc.nivellActual = nivell;
-  guardarEstat();
-  actualitzarUI();
-  mostrarTab('missio');
-}
-
-// === GREMI ===
+// === GREMI AMB SUB-TABS ===
 window.mostrarGremi = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   contenidor.innerHTML = `
@@ -172,6 +182,12 @@ window.mostrarGremi = function() {
 window.mostrarSubTab = function(tab, btn) {
   document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+
+  if (window.memoryInterval) {
+    clearInterval(window.memoryInterval);
+    window.memoryInterval = null;
+  }
+
   if (tab === 'diccionari') mostrarDiccionari();
   if (tab === 'memory') mostrarMemory();
   if (tab === 'tips') mostrarTips();
@@ -181,14 +197,11 @@ window.mostrarSubTab = function(tab, btn) {
 // === DICCIONARI ===
 window.mostrarDiccionari = function() {
   const contenidor = document.getElementById('gremi-subcontent');
-  const desbloquejats = getEmojisDesbloquejats(estatJoc.nivellActual).map(e => e.emoji);
+  const emojis = getEmojisPerNivell(estatJoc.nivellActual);
   contenidor.innerHTML = `
-    <h3>📖 Diccionari complet</h3>
+    <h3>📖 Diccionari d'Emojis</h3>
     <div class="diccionari-grid">
-      ${EMOJI_DATA.map(e => {
-        const desbloquejat = desbloquejats.includes(e.emoji);
-        return `<div class="emoji-item ${desbloquejat? '' : 'bloquejat'}" title="${e.ca}">${e.emoji}</div>`;
-      }).join('')}
+      ${emojis.map(e => `<div class="emoji-item" title="${e.ca}">${e.emoji}</div>`).join('')}
     </div>
   `;
 }
@@ -196,119 +209,169 @@ window.mostrarDiccionari = function() {
 // === MEMORY ===
 window.mostrarMemory = function() {
   const contenidor = document.getElementById('gremi-subcontent');
-  contenidor.innerHTML = `<h3>🎮 Mini-joc</h3><p>Pròximament: Memory amb emojis</p>`;
+  estatJoc.memoryParells = 0;
+
+  if (window.memoryInterval) {
+    clearInterval(window.memoryInterval);
+    window.memoryInterval = null;
+  }
+
+  const emojis = getEmojisPerNivell(estatJoc.nivellActual).slice(0,6);
+  const parelles = [...emojis,...emojis].sort(() => Math.random()-0.5);
+
+  contenidor.innerHTML = `
+    <div class="memory-grid" id="memory-grid"></div>
+    <div id="memory-stats">Parells: 0/6 | Temps: 0</div>
+  `;
+
+  let temps = 0;
+  window.memoryInterval = setInterval(() => {
+    temps++;
+    const stats = document.getElementById('memory-stats');
+    if (stats) stats.textContent = `Parells: ${estatJoc.memoryParells}/6 | Temps: ${temps}`;
+  }, 1000);
+
+  const grid = document.getElementById('memory-grid');
+  parelles.forEach((e, idx) => {
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.dataset.emoji = e.emoji;
+    card.onclick = () => voltejarCarta(card);
+    grid.appendChild(card);
+  });
 }
 
-// === TIPS amb Parlantitos ===
+let cartesVoltejades = [];
+function voltejarCarta(card) {
+  if (card.classList.contains('voltejada') || cartesVoltejades.length === 2) return;
+  card.classList.add('voltejada');
+  card.textContent = card.dataset.emoji;
+  cartesVoltejades.push(card);
+  if (cartesVoltejades.length === 2) {
+    setTimeout(() => {
+      if (cartesVoltejades[0].dataset.emoji === cartesVoltejades[1].dataset.emoji) {
+        cartesVoltejades.forEach(c => c.classList.add('acertada'));
+        estatJoc.memoryParells++;
+        if (estatJoc.memoryParells === 6) {
+          clearInterval(window.memoryInterval);
+          alert('Guanyat!');
+          estatJoc.monedes += 10;
+          guardarEstat();
+          actualitzarUI();
+        }
+      } else {
+        cartesVoltejades.forEach(c => {
+          c.classList.remove('voltejada');
+          c.textContent = '';
+        });
+      }
+      cartesVoltejades = [];
+    }, 800);
+  }
+}
+
+// === TIPS ===
 window.mostrarTips = function() {
   const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
   const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
-  const tips = TIPS_DATA[nivell].filter(t => t.categoria === categoria);
-  const tip = tips[Math.floor(Math.random() * tips.length)];
-  langAudioActual = idiomaActual.split('-')[0];
-  const renderTip = (langKey) => {
-    const titol = getTextEnIdioma(tip, idiomaActual).titol;
-    const text = tip[langKey].text;
-    return `
+  const tip = getRandomTip(categoria, nivell);
+  const data = getTipTranslation(tip, idiomaActual);
+
+  const textCA = tip.ca.text.replace(/'/g, "\\'");
+  const textES = tip.es.text.replace(/'/g, "\\'");
+  const textEN = tip.en.text.replace(/'/g, "\\'");
+
+  contenidor.innerHTML = `
+    <div id="tips-container">
       <div class="tip-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h3>${titol}</h3>
-          <button onclick="parlarText('${text.replace(/'/g,"\\'")}', '${langKey}')" class="btn-audio">🔊</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3>${data.titol}</h3>
+          <button onclick="parlarText('${textCA}', 'ca')" class="btn-audio">🔊</button>
         </div>
-        <p id="tip-text">${text}</p>
+        <p id="tip-text" style="color:var(--text-sec);line-height:1.6;">${data.text}</p>
         <div class="lang-audio-buttons">
-          <button onclick="canviarLangTip('${tip.id}', 'ca', this)" class="lang-btn ${langKey==='ca'?'active':''}">CA</button>
-          <button onclick="canviarLangTip('${tip.id}', 'es', this)" class="lang-btn ${langKey==='es'?'active':''}">ES</button>
-          <button onclick="canviarLangTip('${tip.id}', 'en', this)" class="lang-btn ${langKey==='en'?'active':''}">EN</button>
+          <button onclick="parlarText('${textCA}', 'ca'); canviarTextTip('${textCA}')" class="lang-btn active">CA</button>
+          <button onclick="parlarText('${textES}', 'es'); canviarTextTip('${textES}')" class="lang-btn">ES</button>
+          <button onclick="parlarText('${textEN}', 'en'); canviarTextTip('${textEN}')" class="lang-btn">EN</button>
         </div>
       </div>
-    `;
-  };
-  contenidor.innerHTML = renderTip(langAudioActual) + `<button class="btn-nova" onclick="mostrarTips()">🔄 Nou Tip</button>`;
+      <button class="btn-encert" onclick="iniciarQuizTips()">🧠 Contestar</button>
+      <div id="quiz-tips-container" style="display:none">
+        <p id="pregunta-tip"></p>
+        <input type="text" id="input-resposta-tip" placeholder="Escriu la resposta...">
+        <button class="btn-encert" onclick="comprovarRespostaTip()">Comprovar</button>
+        <button class="btn-secundari" onclick="saltarTip()">Saltar</button>
+        <button class="btn-audio" onclick="parlarTip()">🔊 Parlantito</button>
+        <div id="feedback-tip"></div>
+      </div>
+    </div>
+  `;
 }
 
-window.canviarLangTip = function(tipId, langKey, btn) {
-  const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const tip = TIPS_DATA[nivell].find(t => t.id === tipId);
-  if (!tip) return;
-  const text = tip[langKey].text;
-  document.getElementById('tip-text').textContent = text;
-  const parent = btn.closest('.tip-card');
-  parent.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+window.canviarTextTip = function(nouText) {
+  document.getElementById('tip-text').textContent = nouText;
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+  event.currentTarget.classList.add('active');
 }
 
-// === LECTURA: 100% separat de Diccionari i Frases ===
-// Agafa contingut només de LECTURA_CONTENT a lectura-content.js
+// === LECTURA ===
 window.mostrarLectura = function() {
   const contenidor = document.getElementById('gremi-subcontent');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const textos = LECTURA_CONTENT[nivell] || LECTURA_CONTENT[1];
-  if (!textos || textos.length === 0) {
-    contenidor.innerHTML = '<p>No hi ha lectures per aquest nivell encara.</p>';
-    return;
-  }
-  langAudioActual = idiomaActual.split('-')[0];
+  const lang = idiomaActual.split('-')[0];
   let html = '<h3>📚 Lectures</h3>';
-  textos.slice(0, 5).forEach((textObj, i) => {
-    const text = textObj[langAudioActual] || textObj.ca;
+  for (let i = 0; i < 3; i++) {
+    const text = generarTextLectura(nivell, lang);
     html += `
-      <div class="lectura-card" id="lectura-${i}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <h4>Lectura ${i+1} - B${nivell}</h4>
-          <button onclick="parlarText('${text.replace(/'/g,"\\'")}', '${langAudioActual}')" class="btn-audio">🔊</button>
-        </div>
-        <p class="lectura-text" id="lectura-text-${i}">${text}</p>
-        <div class="lang-audio-buttons">
-          <button onclick="canviarLangLectura(${i}, 'ca')" class="lang-btn ${langAudioActual==='ca'?'active':''}">CA</button>
-          <button onclick="canviarLangLectura(${i}, 'es')" class="lang-btn ${langAudioActual==='es'?'active':''}">ES</button>
-          <button onclick="canviarLangLectura(${i}, 'en')" class="lang-btn ${langAudioActual==='en'?'active':''}">EN</button>
-        </div>
+      <div class="lectura-card">
+        <h4>Lectura ${i+1} - B${nivell}</h4>
+        <button class="btn-audio" onclick="parlarText('${text.replace(/'/g,"\\'")}', '${lang}')">🔊 Escoltar</button>
+        <p>${text}</p>
       </div>
     `;
-  });
+  }
   html += `<button class="btn-nova" onclick="mostrarLectura()">🔄 Noves lectures</button>`;
   contenidor.innerHTML = html;
 }
 
-window.canviarLangLectura = function(index, langKey) {
-  const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const textos = LECTURA_CONTENT[nivell] || LECTURA_CONTENT[1];
-  const textObj = textos[index];
-  if (!textObj) return;
-  const text = textObj[langKey] || textObj.ca;
-  const card = document.getElementById(`lectura-text-${index}`);
-  if (card) card.textContent = text;
-  const parent = card.closest('.lectura-card');
-  parent.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+// === MAPA 100 NIVELLS ===
+window.mostrarMapa = function() {
+  const contenidor = document.getElementById('mapa-contenidor');
+  let html = '<div id="mapa-nivells">';
+  for (let i = 1; i <= 100; i++) {
+    const bloquejat = i > estatJoc.nivellActual + 1;
+    const completat = i < estatJoc.nivellActual;
+    const actiu = i === estatJoc.nivellActual;
+    html += `<div class="nivell-btn ${bloquejat?'bloquejat':''} ${completat?'completat':''} ${actiu?'actiu':''}" onclick="${bloquejat?'':`seleccionarNivell(${i})`}">
+      ${bloquejat?'🔒':completat?'✅':i}
+      ${!bloquejat &&!completat?i:''}
+    </div>`;
+  }
+  html += '</div>';
+  contenidor.innerHTML = html;
+}
+
+window.seleccionarNivell = function(nivell) {
+  estatJoc.nivellActual = nivell;
+  guardarEstat();
+  actualitzarUI();
+  mostrarTab('missio');
 }
 
 // === BOTIGA ===
 window.mostrarBotiga = function() {
   const contenidor = document.getElementById('botiga-contenidor');
-  const packs = [];
-  for (let i = 0; i < EMOJI_DATA.length; i += 15) {
-    const slice = EMOJI_DATA.slice(i, i + 15);
-    packs.push({
-      id: `pack${Math.floor(i/15)+1}`,
-      nom: `Pack ${Math.floor(i/15)+1}`,
-      emoji: slice[0]?.emoji || '📦',
-      preu: 20 + Math.floor(i/15) * 10,
-      emojis: slice
-    });
-  }
   let html = '<div class="botiga-grid">';
-  packs.forEach(pack => {
+  BOTIGA_PACKS.forEach(pack => {
     const comprat = estatJoc.packsComprats.includes(pack.id);
     html += `
-      <div class="pack-card ${comprat? 'comprat' : ''}">
+      <div class="pack-card ${comprat?'comprat':''}">
         <div class="puck">${pack.emoji}</div>
         <h4>${pack.nom}</h4>
         <p>${pack.preu} monedes</p>
-        <button ${comprat? 'disabled' : ''} onclick="comprarPack('${pack.id}', ${pack.preu})">
-          ${comprat? 'Comprat' : 'Comprar'}
+        <button ${comprat?'disabled':''} onclick="comprarPack('${pack.id}', ${pack.preu})">
+          ${comprat?'Comprat':'Comprar'}
         </button>
       </div>
     `;
@@ -318,13 +381,12 @@ window.mostrarBotiga = function() {
 }
 
 window.comprarPack = function(id, preu) {
-  if (estatJoc.monedes >= preu &&!estatJoc.packsComprats.includes(id)) {
+  if (estatJoc.monedes >= preu) {
     estatJoc.monedes -= preu;
     estatJoc.packsComprats.push(id);
     guardarEstat();
     actualitzarUI();
     mostrarBotiga();
-    alert('Pack desbloquejat! Mira el Diccionari');
   }
 }
 
@@ -333,27 +395,17 @@ function actualitzarUI() {
   document.getElementById('nivell-actual').textContent = `Nivell ${estatJoc.nivellActual} - B${getDificultatPerNivell(estatJoc.nivellActual)}`;
   document.getElementById('monedes').textContent = estatJoc.monedes;
   document.getElementById('xp').textContent = estatJoc.xp;
-  document.getElementById('record').textContent = estatJoc.xp;
+  document.getElementById('record').textContent = estatJoc.recordRacha;
 }
 
-// === IDIOMA GLOBAL ===
+// === IDIOMA ===
 document.getElementById('idioma-select').addEventListener('change', (e) => {
   idiomaActual = e.target.value;
-  langAudioActual = idiomaActual.split('-')[0];
   estatJoc.idiomaActual = idiomaActual;
   guardarEstat();
+  iniciarMec1();
 });
 
-// === HASH SHORTCUTS ===
-function activarTabPerHash() {
-  const hash = window.location.hash.replace('#', '');
-  if (hash === 'tab-missio') mostrarTab('missio');
-  else if (hash === 'tab-botiga') mostrarTab('botiga');
-  else if (hash === 'tab-mapa') mostrarTab('mapa');
-  else if (hash === 'tab-gremi') mostrarTab('gremi');
-}
-
 // === INIT ===
-activarTabPerHash();
 actualitzarUI();
-if (!window.location.hash) mostrarTab('mapa');
+iniciarMec1();
