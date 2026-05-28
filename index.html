@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Paraula Ràpida</title>
+<meta name="description" content="Aprèn català, castellà i anglès amb emojis">
+<meta name="theme-color" content="#6B5BFF">
+
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<header>
+  <h1 id="app-titol">Paraula Ràpida</h1>
+  <div id="idioma-display" style="font-size: 12px; margin-top: 4px;"></div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-item">
+    <span id="coins">🪙 0</span>
+    <span id="text-monedes">Monedes</span>
+  </div>
+  <div class="stat-item">
+    <span id="nivell-text">Nivell 1</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="tab-mapa" class="tab-content active">
+    <h2 id="text-mapa" style="margin-bottom: 20px;">🗺️ Mapa de Nivells</h2>
+    <div id="mapa"></div>
+  </div>
+
+  <div id="tab-gremi" class="tab-content">
+    <div class="sub-tabs">
+      <button class="sub-tab-btn active" onclick="mostrarGremi('diccionari', event)">📖 Diccionari</button>
+      <button class="sub-tab-btn" onclick="mostrarGremi('minijoc', event)">🎮 Mini-joc</button>
+    </div>
+    <div id="gremi-contenidor"></div>
+  </div>
+
+  <div id="tab-lectura" class="tab-content">
+    <h2 style="margin-bottom: 20px;">📖 Lectura</h2>
+    <div id="lectura-contenidor"></div>
+  </div>
+
+  <div id="tab-tips" class="tab-content">
+    <h2 style="margin-bottom: 20px;">💡 Tips</h2>
+    <div id="tips-contenidor"></div>
+  </div>
+
+  <div id="tab-botiga" class="tab-content">
+    <h2 id="text-botiga" style="margin-bottom: 20px;">🛒 Botiga</h2>
+    <div id="botiga-contenidor"></div>
+  </div>
+
+</div>
+
+<nav class="bottom-nav">
+  <div class="nav-item active" onclick="canviarTab('mapa', event)">
+    <span class="nav-icon">🗺️</span>
+    <span id="tab-mapa-txt">Mapa</span>
+  </div>
+  <div class="nav-item" onclick="canviarTab('gremi', event)">
+    <span class="nav-icon">📚</span>
+    <span id="tab-gremi-txt">Gremi</span>
+  </div>
+  <div class="nav-item" onclick="canviarTab('lectura', event)">
+    <span class="nav-icon">📖</span>
+    <span id="tab-lectura-txt">Lectura</span>
+  </div>
+  <div class="nav-item" onclick="canviarTab('tips', event)">
+    <span class="nav-icon">💡</span>
+    <span id="tab-tips-txt">Tips</span>
+  </div>
+  <div class="nav-item" onclick="canviarTab('botiga', event)">
+    <span class="nav-icon">🛒</span>
+    <span id="tab-botiga-txt">Botiga</span>
+  </div>
+</nav>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <p id="modalText"></p>
+    <div class="modal-botons">
+      <button onclick="tancarModal()">Cancel·lar</button>
+      <button onclick="confirmarAccio()">Acceptar</button>
+    </div>
+  </div>
+</div>
+
+<script src="./emoji-data.js"></script>
+<script src="./botiga-data.js"></script>
+<script src="./tips-data.js"></script>
+<script src="./lectura-content.js"></script>
+<script src="./lectura-generator.js"></script>
+<script src="./main.js"></script>
+
+</body>
+</html>
