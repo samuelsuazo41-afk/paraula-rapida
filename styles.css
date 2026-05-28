@@ -75,7 +75,7 @@ header h1 {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* === CARTA DE FRASE - PARAULA RÀPIDA === */
+/* === JUGAR: ARMA LA FRASE === */
 #minijoc-container {
   background: var(--card);
   border-radius: 16px;
@@ -91,58 +91,81 @@ header h1 {
   color: var(--text-sec);
 }
 
-#timer {
-  font-size: 48px;
-  font-weight: 800;
-  margin-bottom: 20px;
-  color: var(--accent);
+#frase-objectiu {
+  font-size: 18px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: var(--text);
+  font-weight: 600;
 }
 
-#carta-actual {
-  font-size: 64px;
-  line-height: 1.4;
-  padding: 40px 20px;
-  background: #222;
+#frase-construida {
+  min-height: 50px;
+  border: 2px dashed #333;
   border-radius: 12px;
-  margin-bottom: 24px;
-  min-height: 140px;
+  margin-bottom: 15px;
+  padding: 10px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  word-spacing: 8px;
   flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+  background: #222;
 }
 
-#minijoc-botons {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+.emoji-slot {
+  font-size: 32px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(255, 107, 53, 0.2);
+  transition: transform 0.2s;
 }
 
-#minijoc-botons button {
-  flex: 1;
+.emoji-slot:active {
+  transform: scale(0.9);
+}
+
+#grid-emojis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.emoji-btn {
+  font-size: 32px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid #333;
+  background: var(--card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emoji-btn:active {
+  transform: scale(0.95);
+}
+
+.emoji-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-encert {
+  width: 100%;
   padding: 16px;
   border-radius: 12px;
   border: none;
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
   transition: transform 0.2s ease;
 }
 
-#minijoc-botons button:active {
+.btn-encert:active {
   transform: scale(0.98);
-}
-
-.btn-pass {
-  background: var(--card);
-  border: 2px solid #333;
-  color: var(--text);
-}
-
-.btn-encert {
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: white;
 }
 
 #minijoc-feedback {
@@ -151,6 +174,7 @@ header h1 {
   border-radius: 12px;
   font-size: 15px;
   line-height: 1.5;
+  margin-top: 20px;
 }
 
 #minijoc-feedback.correcte {
@@ -170,16 +194,6 @@ header h1 {
   margin-top: 8px;
   font-size: 14px;
   color: var(--text-sec);
-}
-
-#minijoc-feedback .tema-cultura {
-  display: inline-block;
-  background: var(--cultura);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-top: 8px;
 }
 
 /* === MAPA DE 100 NIVELLS === */
@@ -258,6 +272,121 @@ header h1 {
   min-height: 200px;
 }
 
+/* === MINI-JOC MEMORY === */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 300px;
+  margin: 0 auto 20px;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  background: var(--card);
+  border: 2px solid #333;
+  border-radius: 12px;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.memory-card.voltejada {
+  background: #222;
+  border-color: var(--accent);
+}
+
+.memory-card.acertada {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: var(--success);
+  cursor: default;
+}
+
+#memory-stats {
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-sec);
+  margin-top: 15px;
+}
+
+/* === DICCIONARI === */
+.diccionari-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.emoji-item {
+  aspect-ratio: 1;
+  background: var(--card);
+  border: 2px solid #333;
+  border-radius: 10px;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emoji-item.bloquejat {
+  opacity: 0.3;
+  background: #111;
+}
+
+/* === BOTIGA === */
+.botiga-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.pack-card {
+  background: var(--card);
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.pack-card.comprat {
+  border-color: var(--success);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.pack-card.bloquejat {
+  opacity: 0.6;
+}
+
+.pack-card h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.pack-card p {
+  font-size: 24px;
+  margin-bottom: 12px;
+  letter-spacing: 4px;
+}
+
+.pack-card button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pack-card button:disabled {
+  background: #333;
+  color: var(--text-sec);
+  cursor: not-allowed;
+}
+
 /* === BOTTOM NAV === */
 .bottom-nav {
   position: fixed;
@@ -288,4 +417,4 @@ header h1 {
   font-size: 24px;
   display: block;
   margin-bottom: 4px;
-  }
+}
