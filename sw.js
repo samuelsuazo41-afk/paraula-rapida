@@ -1,5 +1,5 @@
-// sw.js - Paraula Ràpida v2.7
-const CACHE_NAME = 'paraula-rapida-v27';
+// sw.js - Paraula Ràpida v2.9
+const CACHE_NAME = 'paraula-rapida-v29';
 const ASSETS = [
   './',
   './index.html',
