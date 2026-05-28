@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paraula-rapida-v20';
+const CACHE_NAME = 'paraula-rapida-v22';
 const FILES_TO_CACHE = [
   './',
   './index.html',
