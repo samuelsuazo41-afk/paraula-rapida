@@ -1,6 +1,6 @@
-// main.js v2.7 - Paraula Ràpida complet amb fixes Gremi + Timer + Quiz Tips
+// main.js v2.9 - Paraula Ràpida complet amb fixes Gremi + Timer + Quiz Tips
 
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v27')) || {
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v29')) || {
   nivellActual: 1,
   monedes: 20,
   xp: 0,
@@ -17,7 +17,7 @@ let memoryInterval = null;
 let tipActual = null;
 
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v27', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v29', JSON.stringify(estatJoc));
 }
 
 function getDificultatPerNivell(nivell) {
