@@ -1,167 +1,157 @@
-// frases-data.js v2.0 - Paraula Ràpida
-// Generador de frases + Diccionari. Llegeix EMOJI_DATA i no petarà mai.
+// frases-data.js v1.0 - Paraula Ràpida
+// 150 plantillas para Mini-Joc. Formato Cròniques NY.
 
-const PLANTILLES_FRASES = {
- 1: [
-    {id: "p1_1", text: "El {persona} mira el {objecte}", dificultat: 1, categories: ["persona", "objecte"]},
-    {id: "p1_2", text: "La {persona} troba el {objecte} a {lloc}", dificultat: 1, categories: ["persona", "objecte", "lloc"]},
-    {id: "p1_3", text: "El {animal} corre per {natura}", dificultat: 1, categories: ["animal", "natura"]},
-    {id: "p1_4", text: "La {persona} escolta {sons}", dificultat: 1, categories: ["persona", "sons"]},
-    {id: "p1_5", text: "El {persona} està {emotions} avui", dificultat: 1, categories: ["persona", "emotions"]},
-    {id: "p1_6", text: "Fa {temps} a {lloc}", dificultat: 1, categories: ["temps", "lloc"]},
-    {id: "p1_7", text: "El {persona} va a {lloc} amb el {transport}", dificultat: 1, categories: ["persona", "lloc", "transport"]},
-    {id: "p1_8", text: "La {persona} juga a {esports}", dificultat: 1, categories: ["persona", "esports"]},
-    {id: "p1_9", text: "El {persona} treballa de {professio}", dificultat: 1, categories: ["persona", "professio"]},
-    {id: "p1_10", text: "La {persona} porta {roba}", dificultat: 1, categories: ["persona", "roba"]},
-    {id: "p1_11", text: "La {persona} menja {menjar}", dificultat: 1, categories: ["persona", "menjar"]},
-    {id: "p1_12", text: "El {persona} fa {gestos}", dificultat: 1, categories: ["persona", "gestos"]},
-    {id: "p1_13", text: "El número és {numeros}", dificultat: 1, categories: ["numeros"]},
-    {id: "p1_14", text: "El color és {colors}", dificultat: 1, categories: ["colors"]},
-    {id: "p1_15", text: "La {persona} visita {lloc_catala}", dificultat: 1, categories: ["persona", "lloc_catala"]}
-  ],
- 2: [
-    {id: "p2_1", text: "El {animal_ext} dorm sota el {objecte}", dificultat: 2, categories: ["animal_ext", "objecte"]},
-    {id: "p2_2", text: "La {persona} fotografia el {animal} a {natura_catala}", dificultat: 2, categories: ["persona", "animal", "natura_catala"]},
-    {id: "p2_3", text: "El {persona} toca {sons} amb el {objecte}", dificultat: 2, categories: ["persona", "sons", "objecte"]},
-    {id: "p2_4", text: "La {persona} se sent {emotions} amb el {temps}", dificultat: 2, categories: ["persona", "emotions", "temps"]},
-    {id: "p2_5", text: "El {professio} arregla el {transport}", dificultat: 2, categories: ["professio", "transport"]},
-    {id: "p2_6", text: "La {persona} guanya a {esports_catala} a {lloc_catala}", dificultat: 2, categories: ["persona", "esports_catala", "lloc_catala"]},
-    {id: "p2_7", text: "El {professio} ajuda a la {persona} a {lloc_catala}", dificultat: 2, categories: ["professio", "persona", "lloc_catala"]},
-    {id: "p2_8", text: "La {persona} compra {roba_ext} a {lloc_catala}", dificultat: 2, categories: ["persona", "roba_ext", "lloc_catala"]},
-    {id: "p2_9", text: "El {animal_ext} amaga el {objecte} a {natura_catala}", dificultat: 2, categories: ["animal_ext", "objecte", "natura_catala"]},
-    {id: "p2_10", text: "La {persona} cuina {menjar_catala} a {lloc_catala}", dificultat: 2, categories: ["persona", "menjar_catala", "lloc_catala"]}
-  ],
- 3: [
-    {id: "p3_1", text: "El {persona} i el {persona} van a {lloc_catala} amb {transport}", dificultat: 3, categories: ["persona", "persona", "lloc_catala", "transport"]},
-    {id: "p3_2", text: "La {persona} toca {sons} mentre el {animal_ext} juga a {natura_catala}", dificultat: 3, categories: ["persona", "sons", "animal_ext", "natura_catala"]},
-    {id: "p3_3", text: "El {professio} repara el {eines} sota el {temps} a {lloc_catala}", dificultat: 3, categories: ["professio", "eines", "temps", "lloc_catala"]},
-    {id: "p3_4", text: "La {persona} porta {roba_ext} i escolta {sons}", dificultat: 3, categories: ["persona", "roba_ext", "sons"]},
-    {id: "p3_5", text: "El {animal_ext} amaga el {objecte} a {natura_catala} amb {temps}", dificultat: 3, categories: ["animal_ext", "objecte", "natura_catala", "temps"]},
-    {id: "p3_6", text: "La {persona} està {emotions} i balla {sons} a la {festa_catala}", dificultat: 3, categories: ["persona", "emotions", "sons", "festa_catala"]},
-    {id: "p3_7", text: "El {professio} ensenya {esports_catala} a {lloc_catala}", dificultat: 3, categories: ["professio", "esports_catala", "lloc_catala"]},
-    {id: "p3_8", text: "La {persona} fotografia {natura_catala} amb el {tecnologia_ext}", dificultat: 3, categories: ["persona", "natura_catala", "tecnologia_ext"]}
-  ],
- 4: [
-    {id: "p4_1", text: "El {persona} celebra amb {sons}, {roba_ext} i {emotions} a la {festa_catala}", dificultat: 4, categories: ["persona", "sons", "roba_ext", "emotions", "festa_catala"]},
-    {id: "p4_2", text: "La {persona} fotografia el {animal_ext} a {natura_catala} amb {temps} i el {tecnologia_ext}", dificultat: 4, categories: ["persona", "animal_ext", "natura_catala", "temps", "tecnologia_ext"]},
-    {id: "p4_3", text: "El {professio} repara el {eines} sota el {temps} i escolta {sons} a {lloc_catala}", dificultat: 4, categories: ["professio", "eines", "temps", "sons", "lloc_catala"]},
-    {id: "p4_4", text: "La {persona} juga a {esports_catala} amb {senyals} i està {emotions}", dificultat: 4, categories: ["persona", "esports_catala", "senyals", "emotions"]},
-    {id: "p4_5", text: "El {animal_ext} corre per {natura_catala} amb el {objecte} i el {fletxes}", dificultat: 4, categories: ["animal_ext", "natura_catala", "objecte", "fletxes"]},
-    {id: "p4_6", text: "La {persona} pinta {natura_catala} escoltant {sons} i està {emotions} com {artista_catala}", dificultat: 4, categories: ["persona", "natura_catala", "sons", "emotions", "artista_catala"]}
-  ],
- 5: [
-    {id: "p5_1", text: "El {professio} i el {persona} treballen junts a {lloc_catala} amb el {eines}", dificultat: 5, categories: ["professio", "persona", "lloc_catala", "eines"]},
-    {id: "p5_2", text: "La {persona} viatja amb el {transport} portant {roba_ext} i escoltant {sons}", dificultat: 5, categories: ["persona", "transport", "roba_ext", "sons"]},
-    {id: "p5_3", text: "El {animal_ext} juga a {natura_catala} amb el {objecte} sota el {temps} {fletxes}", dificultat: 5, categories: ["animal_ext", "natura_catala", "objecte", "temps", "fletxes"]},
-    {id: "p5_4", text: "La {persona} i el {persona} celebren a {lloc_catala} amb {sons} i {emotions} {simbols}", dificultat: 5, categories: ["persona", "persona", "lloc_catala", "sons", "emotions", "simbols"]},
-    {id: "p5_5", text: "El {professio} llegeix el {senyals} i va cap al {fletxes} a {lloc_catala}", dificultat: 5, categories: ["professio", "senyals", "fletxes", "lloc_catala"]},
-    {id: "p5_6", text: "La {persona} paga amb {diners} i rep el {objecte} a {lloc_catala}", dificultat: 5, categories: ["persona", "diners", "objecte", "lloc_catala"]},
-    {id: "p5_7", text: "El {persona} porta {disfresses} i fa {senyals_gest} a la {festa_catala}", dificultat: 5, categories: ["persona", "disfresses", "senyals_gest", "festa_catala"]}
+const FRASES_DATA = {
+  "frases": [
+    {"id": "p1_1","text": "El {persona} mira el {objecte}","dificultat": 1,"categories": ["persona", "objecte"]},
+    {"id": "p1_2","text": "La {persona} troba el {objecte} a {lloc}","dificultat": 1,"categories": ["persona", "objecte", "lloc"]},
+    {"id": "p1_3","text": "El {animal} corre per {natura}","dificultat": 1,"categories": ["animal", "natura"]},
+    {"id": "p1_4","text": "La {persona} escolta {musica}","dificultat": 1,"categories": ["persona", "musica"]},
+    {"id": "p1_5","text": "El {persona} està {emocio} avui","dificultat": 1,"categories": ["persona", "emocio"]},
+    {"id": "p1_6","text": "Fa {clima} a {lloc}","dificultat": 1,"categories": ["clima", "lloc"]},
+    {"id": "p1_7","text": "El {persona} va a {lloc} amb el {transport}","dificultat": 1,"categories": ["persona", "lloc", "transport"]},
+    {"id": "p1_8","text": "La {persona} juga a {esport}","dificultat": 1,"categories": ["persona", "esport"]},
+    {"id": "p1_9","text": "El {persona} treballa de {professio}","dificultat": 1,"categories": ["persona", "professio"]},
+    {"id": "p1_10","text": "La {persona} porta {roba}","dificultat": 1,"categories": ["persona", "roba"]},
+    {"id": "p2_1","text": "El {animal} dorm sota el {objecte}","dificultat": 1,"categories": ["animal", "objecte"]},
+    {"id": "p2_2","text": "La {persona} fotografia el {animal} a {natura}","dificultat": 1,"categories": ["persona", "animal", "natura"]},
+    {"id": "p2_3","text": "El {persona} toca {musica} amb el {objecte}","dificultat": 1,"categories": ["persona", "musica", "objecte"]},
+    {"id": "p2_4","text": "La {persona} se sent {emocio} amb el {clima}","dificultat": 1,"categories": ["persona", "emocio", "clima"]},
+    {"id": "p2_5","text": "El {persona} arregla el {transport}","dificultat": 1,"categories": ["persona", "transport"]},
+    {"id": "p2_6","text": "La {persona} guanya a {esport} a {lloc}","dificultat": 1,"categories": ["persona", "esport", "lloc"]},
+    {"id": "p2_7","text": "El {professio} ajuda a la {persona} a {lloc}","dificultat": 1,"categories": ["professio", "persona", "lloc"]},
+    {"id": "p2_8","text": "La {persona} compra {roba} a {lloc}","dificultat": 1,"categories": ["persona", "roba", "lloc"]},
+    {"id": "p2_9","text": "El {animal} amaga el {objecte} a {natura}","dificultat": 1,"categories": ["animal", "objecte", "natura"]},
+    {"id": "p2_10","text": "La {persona} canta {musica} amb {emocio}","dificultat": 1,"categories": ["persona", "musica", "emocio"]},
+    {"id": "p3_1","text": "El {persona} llegeix amb el {objecte} a {lloc}","dificultat": 2,"categories": ["persona", "objecte", "lloc"]},
+    {"id": "p3_2","text": "La {persona} balla {musica} sota la {natura}","dificultat": 2,"categories": ["persona", "musica", "natura"]},
+    {"id": "p3_3","text": "El {animal} caça a {natura} amb {clima}","dificultat": 2,"categories": ["animal", "natura", "clima"]},
+    {"id": "p3_4","text": "La {persona} està {emocio} per la {professio}","dificultat": 2,"categories": ["persona", "emocio", "professio"]},
+    {"id": "p3_5","text": "El {transport} va ràpid per {lloc}","dificultat": 2,"categories": ["transport", "lloc"]},
+    {"id": "p3_6","text": "La {persona} entrena {esport} cada dia","dificultat": 2,"categories": ["persona", "esport"]},
+    {"id": "p3_7","text": "El {professio} repara el {objecte}","dificultat": 2,"categories": ["professio", "objecte"]},
+    {"id": "p3_8","text": "La {persona} tria {roba} per la festa","dificultat": 2,"categories": ["persona", "roba"]},
+    {"id": "p3_9","text": "El {animal} juga amb el {objecte} a {lloc}","dificultat": 2,"categories": ["animal", "objecte", "lloc"]},
+    {"id": "p3_10","text": "La {persona} grava {musica} al {objecte}","dificultat": 2,"categories": ["persona", "musica", "objecte"]},
+    {"id": "p4_1","text": "El {persona} celebra amb {emocio} a {lloc}","dificultat": 2,"categories": ["persona", "emocio", "lloc"]},
+    {"id": "p4_2","text": "La {persona} viatja amb el {transport} sota el {clima}","dificultat": 2,"categories": ["persona", "transport", "clima"]},
+    {"id": "p4_3","text": "El {animal} dorm a {natura} quan fa {clima}","dificultat": 2,"categories": ["animal", "natura", "clima"]},
+    {"id": "p4_4","text": "La {persona} ensenya {esport} als nens","dificultat": 2,"categories": ["persona", "esport"]},
+    {"id": "p4_5","text": "El {professio} treballa amb el {objecte} a {lloc}","dificultat": 2,"categories": ["professio", "objecte", "lloc"]},
+    {"id": "p4_6","text": "La {persona} prova {roba} nova a {lloc}","dificultat": 2,"categories": ["persona", "roba", "lloc"]},
+    {"id": "p4_7","text": "El {persona} escolta {musica} i està {emocio}","dificultat": 2,"categories": ["persona", "musica", "emocio"]},
+    {"id": "p4_8","text": "La {persona} cuida el {animal} a {lloc}","dificultat": 2,"categories": ["persona", "animal", "lloc"]},
+    {"id": "p4_9","text": "El {animal} corre quan veu el {transport}","dificultat": 2,"categories": ["animal", "transport"]},
+    {"id": "p4_10","text": "La {persona} pinta {natura} amb el {objecte}","dificultat": 2,"categories": ["persona", "natura", "objecte"]},
+    {"id": "p5_1","text": "El {persona} i el {persona} van a {lloc} amb {transport}","dificultat": 3,"categories": ["persona", "persona", "lloc", "transport"]},
+    {"id": "p5_2","text": "La {persona} toca {musica} mentre el {animal} juga","dificultat": 3,"categories": ["persona", "musica", "animal"]},
+    {"id": "p5_3","text": "El {professio} repara el {transport} sota el {clima}","dificultat": 3,"categories": ["professio", "transport", "clima"]},
+    {"id": "p5_4","text": "La {persona} porta {roba} i escolta {musica}","dificultat": 3,"categories": ["persona", "roba", "musica"]},
+    {"id": "p5_5","text": "El {animal} amaga el {objecte} a {natura} amb {clima}","dificultat": 3,"categories": ["animal", "objecte", "natura", "clima"]},
+    {"id": "p5_6","text": "La {persona} està {emocio} i balla {musica}","dificultat": 3,"categories": ["persona", "emocio", "musica"]},
+    {"id": "p5_7","text": "El {professio} ensenya {esport} a {lloc}","dificultat": 3,"categories": ["professio", "esport", "lloc"]},
+    {"id": "p5_8","text": "La {persona} fotografia {natura} amb el {objecte}","dificultat": 3,"categories": ["persona", "natura", "objecte"]},
+    {"id": "p5_9","text": "El {animal} dorm a {lloc} mentre fa {clima}","dificultat": 3,"categories": ["animal", "lloc", "clima"]},
+    {"id": "p5_10","text": "La {persona} i el {persona} juguen a {esport} a {lloc}","dificultat": 3,"categories": ["persona", "persona", "esport", "lloc"]},
+    {"id": "p6_1","text": "El {persona} troba el {objecte} perdut a {lloc}","dificultat": 3,"categories": ["persona", "objecte", "lloc"]},
+    {"id": "p6_2","text": "La {persona} canta {musica} sota la {natura}","dificultat": 3,"categories": ["persona", "musica", "natura"]},
+    {"id": "p6_3","text": "El {animal} fuig quan veu el {transport}","dificultat": 3,"categories": ["animal", "transport"]},
+    {"id": "p6_4","text": "La {persona} està {emocio} amb el {professio}","dificultat": 3,"categories": ["persona", "emocio", "professio"]},
+    {"id": "p6_5","text": "El {transport} s'atura per culpa del {clima}","dificultat": 3,"categories": ["transport", "clima"]},
+    {"id": "p6_6","text": "La {persona} guanya {esport} i riu amb {emocio}","dificultat": 3,"categories": ["persona", "esport", "emocio"]},
+    {"id": "p6_7","text": "El {professio} compra {roba} a {lloc}","dificultat": 3,"categories": ["professio", "roba", "lloc"]},
+    {"id": "p6_8","text": "La {persona} grava el {animal} amb el {objecte}","dificultat": 3,"categories": ["persona", "animal", "objecte"]},
+    {"id": "p6_9","text": "El {animal} juga a {natura} quan fa sol","dificultat": 3,"categories": ["animal", "natura"]},
+    {"id": "p6_10","text": "La {persona} escolta {musica} al {transport}","dificultat": 3,"categories": ["persona", "musica", "transport"]},
+    {"id": "p7_1","text": "El {persona} pinta {natura} i se sent {emocio}","dificultat": 3,"categories": ["persona", "natura", "emocio"]},
+    {"id": "p7_2","text": "La {persona} repara el {objecte} amb ajuda del {professio}","dificultat": 3,"categories": ["persona", "objecte", "professio"]},
+    {"id": "p7_3","text": "El {animal} dorm sota la {natura} amb {clima} suau","dificultat": 3,"categories": ["animal", "natura", "clima"]},
+    {"id": "p7_4","text": "La {persona} balla {musica} vestida amb {roba}","dificultat": 3,"categories": ["persona", "musica", "roba"]},
+    {"id": "p7_5","text": "El {transport} porta el {persona} a {lloc} ràpid","dificultat": 3,"categories": ["transport", "persona", "lloc"]},
+    {"id": "p7_6","text": "La {persona} guanya a {esport} i ho celebra","dificultat": 3,"categories": ["persona", "esport"]},
+    {"id": "p7_7","text": "El {professio} treballa sota el {clima} dur","dificultat": 3,"categories": ["professio", "clima"]},
+    {"id": "p7_8","text": "La {persona} fotografia el {animal} jugant","dificultat": 3,"categories": ["persona", "animal"]},
+    {"id": "p7_9","text": "El {animal} amaga el {objecte} quan sent {musica}","dificultat": 3,"categories": ["animal", "objecte", "musica"]},
+    {"id": "p7_10","text": "La {persona} està {emocio} veient {natura}","dificultat": 3,"categories": ["persona", "emocio", "natura"]},
+    {"id": "p8_1","text": "El {persona} i el {animal} juguen a {lloc}","dificultat": 3,"categories": ["persona", "animal", "lloc"]},
+    {"id": "p8_2","text": "La {persona} toca {musica} per calmar el {animal}","dificultat": 3,"categories": ["persona", "musica", "animal"]},
+    {"id": "p8_3","text": "El {professio} repara el {transport} a {lloc}","dificultat": 3,"categories": ["professio", "transport", "lloc"]},
+    {"id": "p8_4","text": "La {persona} tria {roba} segons el {clima}","dificultat": 3,"categories": ["persona", "roba", "clima"]},
+    {"id": "p8_5","text": "El {animal} corre per {natura} amb alegria","dificultat": 3,"categories": ["animal", "natura"]},
+    {"id": "p8_6","text": "La {persona} grava {musica} i la comparteix","dificultat": 3,"categories": ["persona", "musica"]},
+    {"id": "p8_7","text": "El {persona} guanya {esport} i està {emocio}","dificultat": 3,"categories": ["persona", "esport", "emocio"]},
+    {"id": "p8_8","text": "La {persona} pinta el {objecte} a {lloc}","dificultat": 3,"categories": ["persona", "objecte", "lloc"]},
+    {"id": "p8_9","text": "El {transport} va lent per la {natura}","dificultat": 3,"categories": ["transport", "natura"]},
+    {"id": "p8_10","text": "La {persona} i el {professio} treballen junts","dificultat": 3,"categories": ["persona", "professio"]},
+    {"id": "p9_1","text": "El {persona} celebra la festa amb {musica} i {roba} nova","dificultat": 4,"categories": ["persona", "musica", "roba"]},
+    {"id": "p9_2","text": "La {persona} fotografia el {animal} a {natura} amb {clima} clar","dificultat": 4,"categories": ["persona", "animal", "natura", "clima"]},
+    {"id": "p9_3","text": "El {professio} repara el {transport} i escolta {musica}","dificultat": 4,"categories": ["professio", "transport", "musica"]},
+    {"id": "p9_4","text": "La {persona} juga a {esport} i està {emocio}","dificultat": 4,"categories": ["persona", "esport", "emocio"]},
+    {"id": "p9_5","text": "El {animal} dorm a {natura} mentre plou","dificultat": 4,"categories": ["animal", "natura", "clima"]},
+    {"id": "p9_6","text": "La {persona} grava el {objecte} i el comparteix","dificultat": 4,"categories": ["persona", "objecte"]},
+    {"id": "p9_7","text": "El {persona} viatja amb el {transport} i escolta {musica}","dificultat": 4,"categories": ["persona", "transport", "musica"]},
+    {"id": "p9_8","text": "La {persona} tria {roba} per anar a {lloc}","dificultat": 4,"categories": ["persona", "roba", "lloc"]},
+    {"id": "p9_9","text": "El {animal} juga amb el {objecte} a {natura}","dificultat": 4,"categories": ["animal", "objecte", "natura"]},
+    {"id": "p9_10","text": "La {persona} i el {persona} ballen {musica} amb {emocio}","dificultat": 4,"categories": ["persona", "persona", "musica", "emocio"]},
+    {"id": "p10_1","text": "El {professio} ensenya {esport} sota el {clima} fred","dificultat": 4,"categories": ["professio", "esport", "clima"]},
+    {"id": "p10_2","text": "La {persona} pinta {natura} amb el {objecte} nou","dificultat": 4,"categories": ["persona", "natura", "objecte"]},
+    {"id": "p10_3","text": "El {animal} corre per {lloc} quan surt el sol","dificultat": 4,"categories": ["animal", "lloc"]},
+    {"id": "p10_4","text": "La {persona} està {emocio} escoltant {musica}","dificultat": 4,"categories": ["persona", "emocio", "musica"]},
+    {"id": "p10_5","text": "El {transport} porta {roba} a {lloc}","dificultat": 4,"categories": ["transport", "roba", "lloc"]},
+    {"id": "p10_6","text": "La {persona} cuida el {animal} i toca {musica}","dificultat": 4,"categories": ["persona", "animal", "musica"]},
+    {"id": "p10_7","text": "El {professio} treballa amb el {objecte} a {natura}","dificultat": 4,"categories": ["professio", "objecte", "natura"]},
+    {"id": "p10_8","text": "La {persona} guanya a {esport} i celebra amb {roba} nova","dificultat": 4,"categories": ["persona", "esport", "roba"]},
+    {"id": "p10_9","text": "El {animal} amaga el {objecte} quan fa vent","dificultat": 4,"categories": ["animal", "objecte", "clima"]},
+    {"id": "p10_10","text": "La {persona} i el {animal} dormen a {lloc} junts","dificultat": 4,"categories": ["persona", "animal", "lloc"]},
+    {"id": "p11_1","text": "El {persona} celebra amb {musica}, {roba} i {emocio}","dificultat": 5,"categories": ["persona", "musica", "roba", "emocio"]},
+    {"id": "p11_2","text": "La {persona} fotografia el {animal} a {natura} amb {clima} i el {objecte}","dificultat": 5,"categories": ["persona", "animal", "natura", "clima", "objecte"]},
+    {"id": "p11_3","text": "El {professio} repara el {transport} sota el {clima} i escolta {musica}","dificultat": 5,"categories": ["professio", "transport", "clima", "musica"]},
+    {"id": "p11_4","text": "La {persona} juga a {esport} amb {roba} nova i està {emocio}","dificultat": 5,"categories": ["persona", "esport", "roba", "emocio"]},
+    {"id": "p11_5","text": "El {animal} corre per {natura} amb el {objecte} i el {transport}","dificultat": 5,"categories": ["animal", "natura", "objecte", "transport"]},
+    {"id": "p11_6","text": "La {persona} pinta {natura} escoltant {musica} i està {emocio}","dificultat": 5,"categories": ["persona", "natura", "musica", "emocio"]},
+    {"id": "p11_7","text": "El {professio} i el {persona} treballen junts a {lloc} amb el {objecte}","dificultat": 5,"categories": ["professio", "persona", "lloc", "objecte"]},
+    {"id": "p11_8","text": "La {persona} viatja amb el {transport} portant {roba} i escoltant {musica}","dificultat": 5,"categories": ["persona", "transport", "roba", "musica"]},
+    {"id": "p11_9","text": "El {animal} juga a {natura} amb el {objecte} sota el {clima}","dificultat": 5,"categories": ["animal", "natura", "objecte", "clima"]},
+    {"id": "p11_10","text": "La {persona} i el {persona} celebren a {lloc} amb {musica} i {emocio}","dificultat": 5,"categories": ["persona", "persona", "lloc", "musica", "emocio"]},
+    {"id": "p12_1","text": "El {persona} grava el {animal} jugant a {natura} amb el {objecte}","dificultat": 4,"categories": ["persona", "animal", "natura", "objecte"]},
+    {"id": "p12_2","text": "La {persona} balla {musica} vestida amb {roba} sota el {clima}","dificultat": 4,"categories": ["persona", "musica", "roba", "clima"]},
+    {"id": "p12_3","text": "El {professio} ensenya {esport} al {animal} a {lloc}","dificultat": 4,"categories": ["professio", "esport", "animal", "lloc"]},
+    {"id": "p12_4","text": "La {persona} viatja amb el {transport} i fotografia {natura}","dificultat": 4,"categories": ["persona", "transport", "natura"]},
+    {"id": "p12_5","text": "El {animal} dorm a {lloc} mentre la {persona} toca {musica}","dificultat": 4,"categories": ["animal", "lloc", "persona", "musica"]},
+    {"id": "p12_6","text": "La {persona} està {emocio} i pinta el {objecte}","dificultat": 4,"categories": ["persona", "emocio", "objecte"]},
+    {"id": "p12_7","text": "El {professio} repara el {transport} i porta {roba} nova","dificultat": 4,"categories": ["professio", "transport", "roba"]},
+    {"id": "p12_8","text": "La {persona} juga a {esport} amb el {animal} a {natura}","dificultat": 4,"categories": ["persona", "esport", "animal", "natura"]},
+    {"id": "p12_9","text": "El {animal} amaga el {objecte} quan sent el {transport}","dificultat": 4,"categories": ["animal", "objecte", "transport"]},
+    {"id": "p12_10","text": "La {persona} celebra amb {musica} i fotografia {natura}","dificultat": 4,"categories": ["persona", "musica", "natura"]},
+    {"id": "p13_1","text": "El {persona} i el {professio} treballen sota el {clima} dur","dificultat": 4,"categories": ["persona", "professio", "clima"]},
+    {"id": "p13_2","text": "La {persona} balla {musica} amb el {animal} a {lloc}","dificultat": 4,"categories": ["persona", "musica", "animal", "lloc"]},
+    {"id": "p13_3","text": "El {transport} porta el {objecte} i la {roba} a {lloc}","dificultat": 4,"categories": ["transport", "objecte", "roba", "lloc"]},
+    {"id": "p13_4","text": "La {persona} pinta {natura} mentre plou","dificultat": 4,"categories": ["persona", "natura", "clima"]},
+    {"id": "p13_5","text": "El {animal} juga amb el {objecte} i està content","dificultat": 4,"categories": ["animal", "objecte"]},
+    {"id": "p13_6","text": "La {persona} escolta {musica} i guanya a {esport}","dificultat": 4,"categories": ["persona", "musica", "esport"]},
+    {"id": "p13_7","text": "El {professio} fotografia el {animal} a {natura}","dificultat": 4,"categories": ["professio", "animal", "natura"]},
+    {"id": "p13_8","text": "La {persona} viatja amb el {transport} vestida amb {roba}","dificultat": 4,"categories": ["persona", "transport", "roba"]},
+    {"id": "p13_9","text": "El {animal} dorm a {natura} sota el cel","dificultat": 4,"categories": ["animal", "natura"]},
+    {"id": "p13_10","text": "La {persona} i el {persona} riuen escoltant {musica}","dificultat": 4,"categories": ["persona", "persona", "musica"]},
+    {"id": "p14_1","text": "El {persona} celebra la victòria amb {musica} i {emocio}","dificultat": 4,"categories": ["persona", "musica", "emocio"]},
+    {"id": "p14_2","text": "La {persona} fotografia el {transport} a {natura}","dificultat": 4,"categories": ["persona", "transport", "natura"]},
+    {"id": "p14_3","text": "El {professio} repara el {objecte} mentre plou","dificultat": 4,"categories": ["professio", "objecte", "clima"]},
+    {"id": "p14_4","text": "La {persona} guanya a {esport} i està {emocio}","dificultat": 4,"categories": ["persona", "esport", "emocio"]},
+    {"id": "p14_5","text": "El {animal} amaga el {objecte} quan fa vent","dificultat": 4,"categories": ["animal", "objecte", "clima"]},
+    {"id": "p14_6","text": "La {persona} i el {persona} ballen {musica} amb {emocio}","dificultat": 4,"categories": ["persona", "persona", "musica", "emocio"]},
+    {"id": "p14_7","text": "El {professio} treballa amb el {objecte} a {natura}","dificultat": 4,"categories": ["professio", "objecte", "natura"]},
+    {"id": "p14_8","text": "La {persona} viatja amb el {transport} i fotografia {natura}","dificultat": 4,"categories": ["persona", "transport", "natura"]},
+    {"id": "p14_9","text": "El {animal} juga amb el {objecte} a {natura}","dificultat": 4,"categories": ["animal", "objecte", "natura"]},
+    {"id": "p14_10","text": "La {persona} i el {animal} dormen a {lloc} junts","dificultat": 4,"categories": ["persona", "animal", "lloc"]},
+    {"id": "p15_1","text": "El {persona} celebra amb {musica}, {roba} i {emocio}","dificultat": 5,"categories": ["persona", "musica", "roba", "emocio"]},
+    {"id": "p15_2","text": "La {persona} fotografia el {animal} a {natura} amb {clima} i el {objecte}","dificultat": 5,"categories": ["persona", "animal", "natura", "clima", "objecte"]},
+    {"id": "p15_3","text": "El {professio} repara el {transport} sota el {clima} i escolta {musica}","dificultat": 5,"categories": ["professio", "transport", "clima", "musica"]},
+    {"id": "p15_4","text": "La {persona} juga a {esport} amb {roba} nova i està {emocio}","dificultat": 5,"categories": ["persona", "esport", "roba", "emocio"]},
+    {"id": "p15_5","text": "El {animal} corre per {natura} amb el {objecte} i el {transport}","dificultat": 5,"categories": ["animal", "natura", "objecte", "transport"]},
+    {"id": "p15_6","text": "La {persona} pinta {natura} escoltant {musica} i està {emocio}","dificultat": 5,"categories": ["persona", "natura", "musica", "emocio"]},
+    {"id": "p15_7","text": "El {professio} i el {persona} treballen junts a {lloc} amb el {objecte}","dificultat": 5,"categories": ["professio", "persona", "lloc", "objecte"]},
+    {"id": "p15_8","text": "La {persona} viatja amb el {transport} portant {roba} i escoltant {musica}","dificultat": 5,"categories": ["persona", "transport", "roba", "musica"]},
+    {"id": "p15_9","text": "El {animal} juga a {natura} amb el {objecte} sota el {clima}","dificultat": 5,"categories": ["animal", "natura", "objecte", "clima"]},
+    {"id": "p15_10","text": "La {persona} i el {persona} celebren a {lloc} amb {musica} i {emocio}","dificultat": 5,"categories": ["persona", "persona", "lloc", "musica", "emocio"]}
   ]
 };
-
-// === DICCIONARI COMPLET v2.0 ===
-// Llegeix EMOJI_DATA i afegeix vocabulari català: cultura, esports, gastronomia, llocs icònics
-const EMOJI_DICCIONARI = {};
-
-// Vocabulari extra català - sense emojis, només paraules per les plantilles
-const VOCABULARI_CAT = {
-  lloc_catala: [
-    "Barcelona", "Girona", "Tarragona", "Lleida", "Sabadell", "Terrassa", "Mataró",
-    "Costa Brava", "Costa Daurada", "Montserrat", "Sagrada Família", "Parc Güell",
-    "Camp Nou", "Estadi Montilivi", "Tibidabo", "Barri Gòtic", "La Boqueria",
-    "Girona vella", "Besalú", "Cadaqués", "Figueres", "Sitges", "Salou", "PortAventura"
-  ],
-  natura_catala: [
-    "els Pirineus", "el Montseny", "el Delta de l’Ebre", "els Aiguamolls", "la Costa Brava",
-    "el Montserrat", "el Parc de Collserola", "les Illes Medes", "el Cap de Creus"
-  ],
-  menjar_catala: [
-    "pa amb tomàquet", "calçots", "escudella", "fideuà", "sarsuela", "crema catalana",
-    "suquet de peix", "cargols a la llauna", "botifarra", "pa de pessic", "xuixos"
-  ],
-  esports_catala: [
-    "futbol", "bàsquet", "handbol", "hoquei patins", "castells", "sardana", "curses de muntanya"
-  ],
-  festa_catala: [
-    "La Mercè", "Sant Jordi", "La Patum", "Festa Major de Gràcia", "Castanyada", "Carnaval de Sitges"
-  ],
-  artista_catala: [
-    "Dalí", "Gaudí", "Miró", "Casals", "Moncada", "Rodoreda", "Maragall"
-  ]
-};
-
-// Diccionaris manuals per emojis que no té EMOJI_DATA
-const DESCS_SENYALS = { /*... igual que abans... */ };
-const DESCS_FLETXES = { /*... igual que abans... */ };
-const DESCS_MANUAL = { /*... igual que abans... */ };
-
-function generarDiccionari() {
-  const CAT_MAP = {
-    persona:"persona",animal:"animal",numeros:"numeros",colors:"colors",gestos:"gestos",
-    menjar:"menjar",objecte:"objecte",professio:"professio",natura:"natura",
-    emotions:"emotions",temps:"temps",fletxes:"fletxes",sons:"sons",animal_ext:"animal_ext",
-    simbols:"simbols",senyals:"senyals",diners:"diners",eines:"eines",tecnologia:"tecnologia_ext",
-    esports:"esports",tradicions:"tradicions",clubs:"clubs",menjar_catala:"menjar_catala",
-    banderes:"banderes",combinats:"combinats",roba:"roba_ext",accessoris:"accessoris",
-    partscos:"partscos",senyals_gest:"senyals_gest",disfresses:"disfresses",oci:"oci"
-  };
-
-  // 1. Omple des d’EMOJI_DATA
-  for (const [nivell, grups] of Object.entries(EMOJI_DATA.emojis)) {
-    for (const [catOrig, emojis] of Object.entries(grups)) {
-      const cat = CAT_MAP[catOrig] || catOrig;
-      if (!EMOJI_DICCIONARI[cat]) EMOJI_DICCIONARI[cat] = {};
-      for (const [e, desc] of Object.entries(emojis)) {
-        if (!EMOJI_DICCIONARI[cat][e]) {
-          EMOJI_DICCIONARI[cat][e] = {nom: desc, desc: desc};
-        }
-      }
-    }
-  }
-
-  // 2. Afegeix vocabulari català a categories sense emoji
-  for (const [cat, llista] of Object.entries(VOCABULARI_CAT)) {
-    if (!EMOJI_DICCIONARI[cat]) EMOJI_DICCIONARI[cat] = {};
-    llista.forEach(p => {
-      EMOJI_DICCIONARI[cat][p] = {nom: p, desc: p};
-    });
-  }
-
-  // 3. Fallback per si falta algo
-  for (const cat in EMOJI_DICCIONARI) {
-    for (const k in EMOJI_DICCIONARI[cat]) {
-      if (!EMOJI_DICCIONARI[cat][k].nom) {
-        EMOJI_DICCIONARI[cat][k] = {nom: k, desc: k};
-      }
-    }
-  }
-}
-
-generarDiccionari();
-
-// Funció per obtenir un emoji/paraula aleatòria d’una categoria
-function getRandomEmoji(cat) {
-  const pool = EMOJI_DICCIONARI[cat];
-  if (!pool) return `{${cat}}`;
-  const keys = Object.keys(pool);
-  const k = keys[Math.floor(Math.random() * keys.length)];
-  return {emoji: k, info: pool[k]};
-}
-
-// Genera una frase substituint placeholders
-function generarFrase(nivell = 1) {
-  const plantilles = PLANTILLES_FRASES[nivell] || PLANTILLES_FRASES[1];
-  const tpl = plantilles[Math.floor(Math.random() * plantilles.length)];
-  let text = tpl.text;
-  const usats = {};
-
-  tpl.categories.forEach(cat => {
-    const {emoji, info} = getRandomEmoji(cat);
-    const regex = new RegExp(`{${cat}}`, 'g');
-    text = text.replace(regex, `<span class="emoji" title="${info.desc}">${emoji}</span>`);
-    usats[cat] = info.nom;
-  });
-
-  return {id: tpl.id, text, dificultat: tpl.dificultat, categories: usats};
-}
