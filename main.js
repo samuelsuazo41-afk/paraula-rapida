@@ -1,9 +1,9 @@
-// main.js - Paraula Ràpida v1.3
-// Mecànica: 25 aciertos = pasar nivel + Botiga + 2 modos de joc + Header color + Vibració
-// Depèn de: emoji-data.js carregat abans
+// main.js - Paraula Ràpida v1.4
+// + Secció Lectura B1-B2-B3 + Parlantito CA/ES/EN
+// 25 aciertos = pasar nivel + Botiga + 2 modos de joc + Header color + Vibració
 
-// === CONFIG PROGRÉS v1.3 ===
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v13')) || {
+// === CONFIG PROGRÉS v1.4 ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v14')) || {
   nivellActual: 1,
   nivellMaximDesbloquejat: 1,
   encerts: 0,
@@ -16,11 +16,11 @@ let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v13')) || {
 };
 
 let dificultatAnterior = getDificultatPerNivell(estatJoc.nivellActual);
-
-// Frases recientes para evitar repetición
 let frasesUsadesRecents = [];
 let cartaActual = null;
 let fraseConstruida = [];
+let cartesVoltejades = [];
+let parellsTrobat = 0;
 
 // === Packs de Botiga ===
 const PACKS_BOTIGA = {
@@ -29,6 +29,43 @@ const PACKS_BOTIGA = {
   natura: {nom: "Natura B2", preu: 350, emojis: ["🦅","🦊","🌲","🌺","🏔️","🌊","🌵","🦋","🐝","🍄","🍁","🍂"]},
   cultura: {nom: "Cultura Catalana", preu: 500, emojis: ["🏰","🎭","🏆","🍅","🎆","💃"]}
 };
+
+// === SECCIÓ LECTURA NIVELLADA ===
+const NOTES_LECTURA = {
+ 1: [
+    {titol: "El meu dia", text: "Em dic Marta. Sóc estudiant. Cada dia vaig a l'escola amb el meu amic Pau. Ens agrada escoltar música i jugar a futbol."},
+    {titol: "La meva casa", text: "Visc en una casa petita amb la meva família. La meva casa té tres habitacions. La meva habitació és blava i m'agrada molt."}
+  ],
+ 2: [
+    {titol: "Un viatge a la muntanya", text: "El cap de setmana passat vaig anar a la muntanya amb els meus amics. Vam caminar durant tres hores. El paisatge era preciós i vam fer moltes fotos."},
+    {titol: "La meva feina", text: "Treballo en una biblioteca. M'agrada ajudar la gent a trobar llibres. Cada dia llegeixo una mica i aprenc coses noves."}
+  ],
+ 3: [
+    {titol: "La Festa Major", text: "Ahir va ser la Festa Major del meu poble. Vam ballar sardanes, vam menjar pa amb tomàquet i vam escoltar música tradicional. Va ser una nit inoblidable."},
+    {titol: "Un llibre interessant", text: "He llegit un llibre sobre la història de Catalunya. He après moltes coses sobre el segle XIX. L'autor explica molt bé els fets i recomano el llibre a tothom."}
+  ]
+};
+
+// === TIPS AMB PARLANTITO CA/ES/EN ===
+const TIPS_DATA = {
+ 1: {
+    ca: {titol: "Article 'el/la'", text: "En català sempre posem l'article davant del nom: el gos, la casa."},
+    es: {titol: "Artículo 'el/la'", text: "En catalán siempre ponemos el artículo delante del nombre: el gos, la casa."},
+    en: {titol: "Article 'el/la'", text: "In Catalan we always use the article before the noun: el gos, la casa."}
+  },
+ 2: {
+    ca: {titol: "Preposició 'a'", text: "'A' indica direcció o ubicació: Vaig a l'escola, Estic a casa."},
+    es: {titol: "Preposición 'a'", text: "'A' indica dirección o ubicación: Vaig a l'escola, Estic a casa."},
+    en: {titol: "Preposition 'a'", text: "'A' shows direction or location: Vaig a l'escola, Estic a casa."}
+  },
+ 3: {
+    ca: {titol: "Verb 'estar' + adjectiu", text: "'Estar' descriu estats temporals: Estic content, Estàs cansat."},
+    es: {titol: "Verbo 'estar' + adjetivo", text: "'Estar' describe estados temporales: Estic content, Estàs cansat."},
+    en: {titol: "Verb 'estar' + adjective", text: "'Estar' describes temporary states: Estic content, Estàs cansat."}
+  }
+};
+
+let idiomaTip = 'ca';
 
 // === PLANTILLES DE FRASES ===
 const PLANTILLES_FRASES = {
@@ -125,6 +162,16 @@ function getExplicacio(gramatica) {
 
 function vibrar(patro = [20]) {
   if (navigator.vibrate) navigator.vibrate(patro);
+}
+
+function parlarText(text, lang) {
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang === 'ca'? 'ca-ES' : lang === 'es'? 'es-ES' : 'en-US';
+    utterance.rate = 0.9;
+    speechSynthesis.speak(utterance);
+  }
 }
 
 // === GENERADOR PRINCIPAL CON ANTI-REPETICIÓN ===
@@ -264,6 +311,9 @@ window.iniciarMemory = function() {
   const parells = getRandomFromPool(estatJoc.emojisDesbloquejats, 6);
   const cartes = [...parells,...parells].sort(() => Math.random() - 0.5);
 
+  parellsTrobat = 0;
+  cartesVoltejades = [];
+
   let html = `<div class="memory-grid">`;
   cartes.forEach((emoji, i) => {
     html += `<div class="memory-card" data-emoji="${emoji}" onclick="voltearCarta(this, ${i})">?</div>`;
@@ -271,7 +321,7 @@ window.iniciarMemory = function() {
   html += `</div><div id="memory-stats">Parells: 0/6 | Temps: 60</div>`;
   contenidor.innerHTML = html;
 
-  let temps = 60, parellsTrobat = 0;
+  let temps = 60;
   const timer = setInterval(() => {
     temps--;
     const statsEl = document.getElementById('memory-stats');
@@ -287,7 +337,6 @@ window.iniciarMemory = function() {
   }, 1000);
 }
 
-let cartesVoltejades = [];
 window.voltearCarta = function(card, index) {
   if (cartesVoltejades.length >= 2 || card.classList.contains('voltejada')) return;
   card.textContent = card.dataset.emoji;
@@ -298,6 +347,7 @@ window.voltearCarta = function(card, index) {
     setTimeout(() => {
       if (cartesVoltejades[0].dataset.emoji === cartesVoltejades[1].dataset.emoji) {
         cartesVoltejades.forEach(c => c.classList.add('acertada'));
+        parellsTrobat++;
       } else {
         cartesVoltejades.forEach(c => {
           c.textContent = '?';
@@ -311,7 +361,7 @@ window.voltearCarta = function(card, index) {
 
 // === BOTIGA ===
 window.mostrarBotiga = function() {
-  const contenidor = document.getElementById('gremi-contenidor');
+  const contenidor = document.getElementById('botiga-contenidor');
   let html = `<h3>🛒 Botiga - Monedes: ${estatJoc.monedes}</h3><div class="botiga-grid">`;
 
   Object.entries(PACKS_BOTIGA).forEach(([id, pack]) => {
@@ -366,9 +416,59 @@ window.mostrarDiccionari = function() {
   contenidor.innerHTML = html;
 }
 
+// === TIPS ===
+function mostrarTips(nivell) {
+  const contenidor = document.getElementById('gremi-contenidor');
+  const tip = TIPS_DATA[nivell] || TIPS_DATA[1];
+  const data = tip[idiomaTip];
+
+  contenidor.innerHTML = `
+    <div class="tip-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3>${data.titol}</h3>
+        <button onclick="parlarText('${data.text.replace(/'/g, "\\'")}', '${idiomaTip}')"
+                style="background:none;border:none;font-size:24px;cursor:pointer;">🔊</button>
+      </div>
+      <p style="color:var(--text-sec);line-height:1.6;">${data.text}</p>
+      <div class="idioma-selector" style="display:flex;gap:8px;margin-top:20px;">
+        <button class="idioma-btn ${idiomaTip==='ca'?'active':''}" onclick="canviarIdiomaTip('ca', ${nivell})">CA</button>
+        <button class="idioma-btn ${idiomaTip==='es'?'active':''}" onclick="canviarIdiomaTip('es', ${nivell})">ES</button>
+        <button class="idioma-btn ${idiomaTip==='en'?'active':''}" onclick="canviarIdiomaTip('en', ${nivell})">EN</button>
+      </div>
+    </div>
+  `;
+}
+
+function canviarIdiomaTip(idioma, nivell) {
+  idiomaTip = idioma;
+  mostrarTips(nivell);
+}
+
+// === LECTURA ===
+function mostrarLectura() {
+  const contenidor = document.getElementById('gremi-contenidor');
+  const nivell = getDificultatPerNivell(estatJoc.nivellActual);
+  const notes = NOTES_LECTURA[nivell] || NOTES_LECTURA[1];
+
+  let html = `<h3>📚 Lectura Nivell B${nivell}</h3>`;
+  notes.forEach((nota) => {
+    html += `
+      <div class="lectura-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <h4>${nota.titol}</h4>
+          <button onclick="parlarText('${nota.text.replace(/'/g, "\\'")}', 'ca')"
+                  style="background:none;border:none;font-size:24px;cursor:pointer;">🔊</button>
+        </div>
+        <p style="color:var(--text-sec);line-height:1.7;">${nota.text}</p>
+      </div>
+    `;
+  });
+  contenidor.innerHTML = html;
+}
+
 // === UI I NAVEGACIÓ ===
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v13', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v14', JSON.stringify(estatJoc));
 }
 
 function actualitzarUI() {
@@ -449,7 +549,8 @@ window.mostrarTab = function(tab, event) {
 
   if (tab === 'diccionari') mostrarDiccionari();
   if (tab === 'minijocs') iniciarMemory();
-  if (tab === 'tips') document.getElementById('gremi-contenidor').innerHTML = '<p style="padding:20px">Tips de gramàtica próximament</p>';
+  if (tab === 'tips') mostrarTips(estatJoc.nivellActual);
+  if (tab === 'lectura') mostrarLectura();
 }
 
 // === INIT ===
