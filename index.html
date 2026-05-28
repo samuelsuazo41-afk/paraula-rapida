@@ -1,105 +1,107 @@
 <!DOCTYPE html>
 <html lang="ca">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Paraula Ràpida</title>
-<meta name="description" content="Joc per aprendre català B1-B3 en 100 nivells">
-<meta name="theme-color" content="#FF6B35">
-
-<!-- PWA -->
-<link rel="manifest" href="./manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- Icones -->
-<link rel="apple-touch-icon" href="./icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
-
-<link rel="stylesheet" href="./styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Paraula Ràpida</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6B5BFF">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="app">
+    <!-- HEADER -->
+    <header class="app-header">
+      <h1>Paraula Ràpida</h1>
+      <div class="header-controls">
+        <span id="nivell-actual">Nivell 1 - B1</span>
+        <select id="idioma-select">
+          <option value="ca-es">Català</option>
+          <option value="es-es">Español</option>
+          <option value="en-us">English</option>
+        </select>
+      </div>
+    </header>
 
-<header id="app-header">
-  <h1 id="app-titol">Paraula Ràpida</h1>
-  <div id="nivell-actual">Nivell 1 - B1</div>
-  <select id="idioma-select">
-    <option value="ca-es">Català → Espanyol</option>
-    <option value="ca-en">Català → English</option>
-    <option value="es-ca">Espanyol → Català</option>
-    <option value="en-ca">English → Català</option>
-  </select>
-</header>
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">Rècord</span>
+        <span class="stat-value" id="record">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Monedes</span>
+        <span class="stat-value" id="monedes">20</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">XP</span>
+        <span class="stat-value" id="xp">0</span>
+      </div>
+    </div>
 
-<div class="stats-bar">
-  <div class="stat-item">🏆 Rècord: <span id="record">0</span></div>
-  <div class="stat-item">Monedes: <span id="monedes">0</span> | XP: <span id="xp">0</span></div>
-</div>
+    <!-- CONTENIDO TABS -->
+    <main class="tab-content-container">
+      
+      <!-- TAB MAPA -->
+      <section id="tab-mapa" class="tab-content active">
+        <h2>Mapa de 100 Nivells</h2>
+        <div id="mapa-nivells" class="mapa-grid"></div>
+      </section>
 
-<div class="container">
+      <!-- TAB JUGAR -->
+      <section id="tab-missio" class="tab-content">
+        <div id="minijoc-container"></div>
+      </section>
 
-  <!-- Tab Mapa -->
-  <div id="tab-mapa" class="tab-content active">
-    <h2 style="margin-bottom: 20px;">🗺️ 100 Nivells</h2>
-    <div id="mapa-nivells"></div>
+      <!-- TAB GREMI -->
+      <section id="tab-gremi" class="tab-content">
+        <div id="gremi-contenidor"></div>
+      </section>
+
+      <!-- TAB BOTIGA -->
+      <section id="tab-botiga" class="tab-content">
+        <h2>Botiga de Packs</h2>
+        <div id="botiga-contenidor"></div>
+      </section>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="mostrarTab('mapa')">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">Mapa</span>
+      </button>
+      <button class="nav-item" onclick="mostrarTab('missio')">
+        <span class="nav-icon">🎮</span>
+        <span class="nav-label">Jugar</span>
+      </button>
+      <button class="nav-item" onclick="mostrarTab('gremi')">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">Gremi</span>
+      </button>
+      <button class="nav-item" onclick="mostrarTab('botiga')">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-label">Botiga</span>
+      </button>
+    </nav>
   </div>
 
-  <!-- Tab Missio -->
-  <div id="tab-missio" class="tab-content">
-    <div id="minijoc-container"></div>
-  </div>
+  <!-- ORDRE DE CÀRREGA IMPORTANT -->
+  <script src="./emoji-data.js"></script>
+  <script src="./frases-data.js"></script>
+  <script src="./tips-data.js"></script>
+  <script src="./botiga-data.js"></script>
+  <script src="./lectura-content.js"></script>
+  <script src="./main.js"></script>
 
-  <!-- Tab Gremi -->
-  <div id="tab-gremi" class="tab-content">
-    <div id="gremi-contenidor"></div>
-  </div>
-
-  <!-- Tab Botiga -->
-  <div id="tab-botiga" class="tab-content">
-    <div id="botiga-contenidor"></div>
-  </div>
-
-</div>
-
-<!-- Bottom Nav -->
-<nav class="bottom-nav">
-  <div class="nav-item active" onclick="mostrarTab('mapa')">
-    <span class="nav-icon">🗺️</span>
-    Mapa
-  </div>
-  <div class="nav-item" onclick="mostrarTab('missio')">
-    <span class="nav-icon">🎯</span>
-    Jugar
-  </div>
-  <div class="nav-item" onclick="mostrarTab('gremi')">
-    <span class="nav-icon">🏛️</span>
-    Gremi
-  </div>
-  <div class="nav-item" onclick="mostrarTab('botiga')">
-    <span class="nav-icon">🛒</span>
-    Botiga
-  </div>
-</nav>
-
-<script>
-// Registrar Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registrat:', reg.scope))
-      .catch(err => console.log('SW error:', err));
-  });
-}
-</script>
-
-<!-- ORDRE CRÍTIC: dades abans que lògica -->
-<script src="./emoji-data.js"></script>
-<script src="./frases-data.js"></script>
-<script src="./tips-data.js"></script>
-<script src="./botiga-data.js"></script>
-<script src="./lectura-generator.js"></script>
-<script src="./main.js"></script>
-
+  <!-- SW REGISTER -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
 </body>
 </html>
