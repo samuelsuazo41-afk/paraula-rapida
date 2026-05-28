@@ -23,7 +23,7 @@
 
 <header>
   <h1 id="app-titol">Paraula Ràpida</h1>
-  <div id="nivell-actual" style="font-size: 12px; margin-top: 4px;">Nivell 1 - B1</div>
+  <div id="nivell-actual" style="font-size: 12px; margin-top: 4px;">Nivell 1 - B1 | Progrés: 0/25</div>
 </header>
 
 <div class="stats-bar">
@@ -31,7 +31,7 @@
     <span id="record">🏆 Rècord: 0</span>
   </div>
   <div class="stat-item" id="stats">
-    Encerts: 0 | Fallades: 0
+    Monedes: 0 | Rècord: 0
   </div>
 </div>
 
@@ -43,27 +43,30 @@
     <div id="mapa-nivells"></div>
   </div>
 
-  <!-- Tab Missio = Joc -->
+  <!-- Tab Missio = Joc: ARMA LA FRASE -->
   <div id="tab-missio" class="tab-content">
     <div id="minijoc-container">
       <h3 id="minijoc-titol">Nivell 1</h3>
-      <div id="timer">60</div>
-      <div id="carta-actual"></div>
-      <div id="minijoc-botons">
-        <button class="btn-pass" onclick="passarCarta()">Pass</button>
-        <button class="btn-encert" onclick="encertarCarta()">Sé</button>
-      </div>
+      <div id="frase-objectiu" style="font-size:18px;margin-bottom:15px;text-align:center;"></div>
+      <div id="frase-construida" style="min-height:50px;border:2px dashed var(--border);border-radius:8px;margin-bottom:15px;padding:10px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;"></div>
+      <div id="grid-emojis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px;"></div>
+      <button class="btn-encert" onclick="comprovarFrase()" style="width:100%;">Comprovar</button>
       <div id="minijoc-feedback"></div>
     </div>
   </div>
 
-  <!-- Tab Gremi = Biblioteca + Tips + Diccionari -->
+  <!-- Tab Gremi = Biblioteca + Tips + Diccionari + Mini-joc -->
   <div id="tab-gremi" class="tab-content">
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="mostrarTab('diccionari', event)">📖 Diccionari</button>
       <button class="sub-tab-btn" onclick="mostrarTab('minijocs', event)">🎮 Mini-joc</button>
       <button class="sub-tab-btn" onclick="mostrarTab('tips', event)">💡 Tips</button>
     </div>
+    <div id="gremi-contenidor"></div>
+  </div>
+
+  <!-- Tab Botiga NUEVO -->
+  <div id="tab-botiga" class="tab-content">
     <div id="gremi-contenidor"></div>
   </div>
 
@@ -81,6 +84,10 @@
   <div class="nav-item" onclick="canviarTab('gremi', event)">
     <span class="nav-icon">📚</span>
     <span>Biblioteca</span>
+  </div>
+  <div class="nav-item" onclick="canviarTab('botiga', event)">
+    <span class="nav-icon">🛒</span>
+    <span>Botiga</span>
   </div>
 </nav>
 
