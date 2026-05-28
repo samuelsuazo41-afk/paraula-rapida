@@ -1,8 +1,8 @@
-// main.js - Paraula Ràpida v2.2
-// Integra emoji-data.js + frases-data.js + tips-data.js + botiga-data.js + 2 mecàniques + Quiz Tips + Parlantito
+// main.js - Paraula Ràpida v2.3
+// Arreglat: getEmojisDesbloquejats + crides inicials + protecció nulls
 
-// === CONFIG PROGRÉS v2.2 ===
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v22')) || {
+// === CONFIG PROGRÉS v2.3 ===
+let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v23')) || {
   nivellActual: 1,
   nivellMaximDesbloquejat: 1,
   encerts: 0,
@@ -10,15 +10,26 @@ let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v22')) || {
   encertsEnAquestNivell: 0,
   record: 0,
   monedes: 0,
-  packsComprats: ["base"] // guarda els IDs dels packs comprats
+  packsComprats: ["base"]
 };
 
-let idiomaActual = 'ca-es'; // ca-es, ca-en, es-ca, en-ca
+let idiomaActual = 'ca-es';
 let cartaActual = null;
 let fraseConstruida = [];
 let cartesVoltejades = [];
 let parellsTrobat = 0;
 let tipActual = null;
+
+// === UTILITATS BOTIGA ===
+function getEmojisDesbloquejats() {
+  let emojis = [];
+  estatJoc.packsComprats.forEach(id => {
+    if (PACKS_BOTIGA[id] && PACKS_BOTIGA[id].emojis) {
+      emojis = emojis.concat(PACKS_BOTIGA[id].emojis);
+    }
+  });
+  return [...new Set(emojis)];
+}
 
 // === SECCIÓ LECTURA NIVELLADA ===
 const NOTES_LECTURA = {
@@ -157,7 +168,7 @@ window.saltarMec2 = function() {
   novaFrase();
 }
 
-// === QUIZ TIPS - CONTESTAR v2.2 ===
+// === QUIZ TIPS ===
 window.iniciarQuizTips = function() {
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
   const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
@@ -181,7 +192,6 @@ window.parlarTip = function() {
 window.comprovarRespostaTip = function() {
   const feedback = document.getElementById('feedback-tip');
   const data = getTipTranslation(tipActual, idiomaActual);
-
   feedback.className = 'correcte';
   feedback.innerHTML = `✅ Correcte! La resposta era: ${data.text}`;
   estatJoc.monedes += 3;
@@ -193,7 +203,7 @@ window.saltarTip = function() {
   document.getElementById('quiz-tips-container').style.display = 'none';
 }
 
-// === BOTIGA v2.2 - PACKS DESBLOQUEJABLES ===
+// === BOTIGA ===
 window.mostrarBotiga = function() {
   const contenidor = document.getElementById('botiga-contenidor');
   let html = `<h3>🛒 Botiga - Monedes: ${estatJoc.monedes}</h3><div class="botiga-grid">`;
@@ -207,7 +217,7 @@ window.mostrarBotiga = function() {
         <div class="puck" style="font-size:48px;text-align:center;margin-bottom:8px;">${puckEmoji}</div>
         <h4>${pack.nom}</h4>
         ${estaComprat
-        ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
+       ? '<div style="color:#4CAF50">✅ Desbloquejat</div>'
           : `<button onclick="comprarPack('${pack.id}')" ${estatJoc.monedes < pack.preu? 'disabled' : ''}>
                ${pack.preu} monedes
              </button>`
@@ -229,7 +239,7 @@ window.comprarPack = function(id) {
   }
 }
 
-// === DICCIONARI v2.2 - NOMÉS EMOJIS DESBLOQUEJATS ===
+// === DICCIONARI ===
 window.mostrarDiccionari = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   const emojisDesbloquejats = getEmojisDesbloquejats();
@@ -242,7 +252,7 @@ window.mostrarDiccionari = function() {
   contenidor.innerHTML = html;
 }
 
-// === TIPS v2.2 - USA tips-data.js EXTERN ===
+// === TIPS ===
 window.mostrarTips = function() {
   const contenidor = document.getElementById('gremi-contenidor');
   const nivell = getDificultatPerNivell(estatJoc.nivellActual);
@@ -346,7 +356,7 @@ window.voltearCarta = function(card) {
 
 // === UI I NAVEGACIÓ ===
 function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v22', JSON.stringify(estatJoc));
+  localStorage.setItem('paraulaRapida_v23', JSON.stringify(estatJoc));
 }
 
 function actualitzarUI() {
@@ -425,7 +435,7 @@ window.mostrarTab = function(tab, event) {
   if (tab === 'lectura') mostrarLectura();
 }
 
-// Listener per canviar idioma Babel
+// Init
 document.addEventListener('DOMContentLoaded', () => {
   const selector = document.getElementById('idioma-select');
   if (selector) {
@@ -435,4 +445,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   actualitzarUI();
   novaFrase();
+  generarMapaNivells();
 });
