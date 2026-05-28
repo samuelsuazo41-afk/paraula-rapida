@@ -43,6 +43,12 @@ function canviarTab(tab, e) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if(e) e.target.closest('.nav-item').classList.add('active');
+
+  // Cargar contenido al cambiar de tab
+  if(tab === 'gremi') mostrarGremi('diccionari');
+  if(tab === 'tips') carregarTips();
+  if(tab === 'lectura') carregarLectura();
+  if(tab === 'botiga') carregarBotiga();
 }
 
 function guardarEstat() {
@@ -65,6 +71,7 @@ function vibrar() {
 // ===== MAPA =====
 function carregarMapa() {
   const mapaDiv = document.getElementById('mapa');
+  if(!mapaDiv) return;
   mapaDiv.innerHTML = '';
   for(let i=1; i<=100; i++) {
     const completat = i < estat.nivell;
@@ -96,6 +103,7 @@ function mostrarGremi(tab, e) {
 
 function mostrarDiccionari() {
   const cont = document.getElementById('gremi-contenidor');
+  if(!cont) return;
   const emojisDesbloquejats = getEmojisDesbloquejats();
   let html = '<h3>Biblioteca d\'Emojis</h3>';
   for(const [cat, emojis] of Object.entries(EMOJI_DATA.emojis.B1)) {
@@ -118,6 +126,7 @@ function mostrarDiccionari() {
 // ===== MINIJOC =====
 function mostrarMinijoc() {
   const cont = document.getElementById('gremi-contenidor');
+  if(!cont) return;
   cont.innerHTML = `
     <h3>${LANG.minijoc_titol}</h3>
     <p style="color:var(--text-sec); margin:12px 0;">${LANG.minijoc_desc}</p>
@@ -190,9 +199,10 @@ function comprovarMinijoc() {
   setTimeout(() => novaFraseMinijoc(), 2000);
 }
 
-// ===== LECTURA CON TTS + SELECTOR IDIOMA =====
+// ===== LECTURA =====
 function carregarLectura() {
   const cont = document.getElementById('lectura-contenidor');
+  if(!cont) return;
   const nivellLectura = estat.nivell <= 25? 1 : estat.nivell <= 75? 2 : 3;
   const text = generarTextLectura(nivellLectura, estat.idioma);
   cont.innerHTML = `
@@ -218,8 +228,10 @@ function canviarIdiomaLectura(lang) {
   carregarLectura();
 }
 
-// ===== TIPS CON TTS + SELECTOR IDIOMA =====
+// ===== TIPS =====
 function carregarTips() {
+  const cont = document.getElementById('tips-contenidor');
+  if(!cont) return;
   const tip = getRandomTip('gramatica', estat.nivell <= 30? 1 : estat.nivell <= 70? 2 : 3);
   estat.tipActual = tip;
   renderitzarTip(tip, estat.idioma);
@@ -262,6 +274,7 @@ function parlar(text, lang) {
 // ===== BOTIGA =====
 function carregarBotiga() {
   const cont = document.getElementById('botiga-contenidor');
+  if(!cont) return;
   cont.innerHTML = '';
   Object.values(PACKS_BOTIGA).forEach(pack => {
     const comprat = estat.packsComprats.includes(pack.id);
