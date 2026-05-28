@@ -2,10 +2,10 @@
   "name": "Paraula Ràpida",
   "short_name": "Paraula",
   "description": "Joc per aprendre català B1-B3 en 100 nivells",
-  "start_url": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#8B0000",
+  "theme_color": "#FF6B35",
   "orientation": "portrait",
   "icons": [
     {
@@ -21,5 +21,5 @@
       "purpose": "any maskable"
     }
   ],
-  "lang": "ca"
+  "categories": ["education", "games", "language"]
 }
