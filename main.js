@@ -1,411 +1,317 @@
-// main.js v2.7 - Paraula Ràpida complet amb fixes Gremi + Timer
+// main.js v3.0 - Paraula Ràpida complet amb Gremi: Diccionari + Tips + Mini-Joc
 
-let estatJoc = JSON.parse(localStorage.getItem('paraulaRapida_v27')) || {
+let estat = JSON.parse(localStorage.getItem('paraulaRapida_v3')) || {
   nivellActual: 1,
   monedes: 20,
   xp: 0,
   recordRacha: 0,
-  packsComprats: [],
-  memoryParells: 0,
-  idiomaActual: 'ca-es'
+  compres: [], // ids de packs comprats
+  idioma: 'ca'
 };
 
-let idiomaActual = estatJoc.idiomaActual;
+let idioma = estat.idioma;
+let EMOJIS_JUGABLES = []; // base + packs comprats
+let CATEGORIES_EMOJI = {}; // {persona: ['👨',...], animal: ['🐱',...],...}
+let FRASES_MINIJOC = [];
 let fraseActual = null;
-let emojiSeleccionats = [];
-let memoryInterval = null;
+let seleccioActual = [];
 
-function guardarEstat() {
-  localStorage.setItem('paraulaRapida_v27', JSON.stringify(estatJoc));
+const NIVELL_MINIJOC = {
+  nivelActual: 1,
+  xp: 0,
+  xpPerNivel: 100
+};
+
+const TRADUCCIONS = {
+  ca: {app: 'Paraula Ràpida', mapa: 'Mapa', gremi: 'Gremi', botiga: 'Botiga', diccionari: 'Diccionari', tips: 'Tips', minijoc: 'Mini-Joc', monedes: 'Monedes', nivell: 'Nivell', novaFrase: 'Nova frase', comprovar: 'Comprovar', correcte: '✅ Correcte!', incorrecte: '❌ Prova de nou'},
+  es: {app: 'Paraula Ràpida', mapa: 'Mapa', gremi: 'Gremi', botiga: 'Tienda', diccionari: 'Diccionario', tips: 'Tips', minijoc: 'Mini-Juego', monedes: 'Monedas', nivell: 'Nivel', novaFrase: 'Nueva frase', comprovar: 'Comprobar', correcte: '✅ ¡Correcto!', incorrecte: '❌ Prueba de nuevo'},
+  en: {app: 'Fast Word', mapa: 'Map', gremi: 'Guild', botiga: 'Shop', diccionari: 'Dictionary', tips: 'Tips', minijoc: 'Mini-Game', monedes: 'Coins', nivell: 'Level', novaFrase: 'New phrase', comprovar: 'Check', correcte: '✅ Correct!', incorrecte: '❌ Try again'}
+};
+
+// === INIT ===
+function init() {
+  carregarDades();
+  aplicarIdioma();
+  actualitzarUI();
+  canviarTab('mapa');
 }
+document.addEventListener('DOMContentLoaded', init);
 
-function getDificultatPerNivell(nivell) {
-  if (nivell <= 25) return 1;
-  if (nivell <= 75) return 2;
-  return 3;
-}
+function carregarDades() {
+  // Emojis base de emoji-data.js
+  let base = [];
+  if (typeof EMOJI_DATA!== 'undefined') base = EMOJI_DATA;
 
-function getEmojisPerNivell(nivell) {
-  const dif = getDificultatPerNivell(nivell);
-  const base = EMOJI_DATA.filter(e => e.nivell <= dif);
-  return base.sort(() => Math.random() - 0.5).slice(0, 8);
-}
+  // Packs comprats de botiga-data.js
+  let packsComprats = [];
+  if (typeof BOTIGA_DATA!== 'undefined') {
+    packsComprats = BOTIGA_DATA.filter(p => estat.compres.includes(p.id));
+  }
 
-function getRandomFrase(nivell) {
-  const dif = getDificultatPerNivell(nivell);
-  const frases = FRASES_DATA[dif] || [];
-  return frases[Math.floor(Math.random() * frases.length)];
-}
+  // Combina base + packs
+  EMOJIS_JUGABLES = [...base];
+  packsComprats.forEach(pack => {
+    EMOJIS_JUGABLES = EMOJIS_JUGABLES.concat(pack.emojis);
+  });
+  // Elimina duplicats per emoji
+  EMOJIS_JUGABLES = EMOJIS_JUGABLES.filter((v,i,a) => a.findIndex(t => t.emoji === v.emoji) === i);
 
-function getRandomTip(categoria, nivell) {
-  const tips = TIPS_DATA[nivell].filter(t => t.categoria === categoria);
-  return tips[Math.floor(Math.random() * tips.length)];
-}
+  // Agrupa per categoria
+  CATEGORIES_EMOJI = {};
+  EMOJIS_JUGABLES.forEach(e => {
+    const cat = e.categoria || 'altres';
+    if (!CATEGORIES_EMOJI[cat]) CATEGORIES_EMOJI[cat] = [];
+    if (!CATEGORIES_EMOJI[cat].includes(e.emoji)) {
+      CATEGORIES_EMOJI[cat].push(e.emoji);
+    }
+  });
 
-function getTipTranslation(tip, lang) {
-  const langKey = lang.split('-')[0];
-  return { titol: tip[langKey].titol, text: tip[langKey].text };
-}
-
-function parlarText(text, lang) {
-  if ('speechSynthesis' in window) {
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (lang === 'ca') utterance.lang = 'ca-ES';
-    else if (lang === 'es') utterance.lang = 'es-ES';
-    else utterance.lang = 'en-US';
-    utterance.rate = 0.9;
-    speechSynthesis.speak(utterance);
+  // Frases de frases-data.js
+  if (typeof FRASES_DATA!== 'undefined' && FRASES_DATA.frases) {
+    FRASES_MINIJOC = FRASES_DATA.frases;
   }
 }
 
+function guardarEstat() {
+  localStorage.setItem('paraulaRapida_v3', JSON.stringify(estat));
+}
+
+function actualitzarUI() {
+  document.getElementById('coins').textContent = `🪙 ${estat.monedes} ${TRADUCCIONS[idioma].monedes}`;
+  document.getElementById('nivell-actual').textContent = `${TRADUCCIONS[idioma].nivell} ${NIVELL_MINIJOC.nivelActual} - B${NIVELL_MINIJOC.nivelActual}`;
+}
+
 // === NAVEGACIÓ ===
-function mostrarTab(tab) {
+function canviarTab(tab, e) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  if (e) e.currentTarget.classList.add('active');
 
-  if (tab === 'missio') iniciarMec1();
   if (tab === 'gremi') mostrarGremi();
   if (tab === 'botiga') mostrarBotiga();
   if (tab === 'mapa') mostrarMapa();
 }
 
-// === MECÀNICA 1: FRSE EMOJI ===
-window.iniciarMec1 = function() {
-  const contenidor = document.getElementById('minijoc-container');
-  fraseActual = getRandomFrase(estatJoc.nivellActual);
-  emojiSeleccionats = [];
-
-  contenidor.innerHTML = `
-    <div id="minijoc-titol">Mecànica 1: Construeix la frase</div>
-    <div id="instruccio-mec1">Clica els emojis en ordre per formar: "${fraseActual.ca}"</div>
-    <div id="frase-objectiu">${fraseActual.ca}</div>
-    <div id="frase-construida"></div>
-    <div id="grid-emojis"></div>
-    <button class="btn-encert" onclick="comprovarMec1()">Comprovar</button>
-    <div id="minijoc-feedback"></div>
-    <button class="btn-nova" onclick="iniciarMec2()">➡️ Passar a Mecànica 2</button>
-  `;
-
-  const grid = document.getElementById('grid-emojis');
-  const emojis = fraseActual.emojis.sort(() => Math.random() - 0.5);
-  emojis.forEach((emoji, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'emoji-btn';
-    btn.textContent = emoji;
-    btn.onclick = () => afegirEmoji(emoji, idx, btn);
-    grid.appendChild(btn);
-  });
+function aplicarIdioma() {
+  document.getElementById('app-titol').textContent = TRADUCCIONS[idioma].app;
+  document.getElementById('tab-mapa-txt').textContent = TRADUCCIONS[idioma].mapa;
+  document.getElementById('tab-gremi-txt').textContent = TRADUCCIONS[idioma].gremi;
+  document.getElementById('tab-botiga-txt').textContent = TRADUCCIONS[idioma].botiga;
+  document.getElementById('idioma-select').value = idioma;
 }
 
-function afegirEmoji(emoji, idx, btn) {
+function canviarIdioma(nouIdioma) {
+  idioma = nouIdioma;
+  estat.idioma = nouIdioma;
+  guardarEstat();
+  aplicarIdioma();
+  actualitzarUI();
+  if (document.getElementById('tab-gremi').classList.contains('active')) mostrarGremi();
+}
+
+// === GREMI ===
+function mostrarGremi(tab = 'diccionari', e) {
+  document.querySelectorAll('#biblioteca-subtabs.sub-tab-btn').forEach(b => b.classList.remove('active'));
+  if (e) e.target.classList.add('active');
+  document.getElementById('biblioteca-subtabs').style.display = 'flex';
+  mostrarBibliotecaTab(tab, e);
+}
+
+function mostrarBibliotecaTab(tab, e) {
+  document.querySelectorAll('#biblioteca-subtabs.sub-tab-btn').forEach(b => b.classList.remove('active'));
+  if (e) e.target.classList.add('active');
+
+  const cont = document.getElementById('gremi-contenidor');
+  cont.innerHTML = '';
+
+  if (tab === 'diccionari') {
+    let html = `<h3>${TRADUCCIONS[idioma].diccionari}</h3><div class="diccionari-grid">`;
+    EMOJIS_JUGABLES.forEach(e => {
+      html += `<div class="emoji-item" title="${e.categoria}">${e.emoji}</div>`;
+    });
+    html += `</div>`;
+    cont.innerHTML = html;
+  }
+
+  if (tab === 'tips') {
+    const nivell = NIVELL_MINIJOC.nivelActual;
+    let html = `<h3>${TRADUCCIONS[idioma].tips}</h3><p style="text-align:center;color:#888;margin-bottom:15px;">Nivell ${nivell}</p>`;
+
+    ['gramatica', 'vocabulari', 'cultura'].forEach(cat => {
+      if (typeof TIPS_DATA!== 'undefined' && TIPS_DATA[cat]) {
+        const tipsFiltrats = TIPS_DATA[cat].filter(t => t.nivell <= nivell);
+        const tip = tipsFiltrats[Math.floor(Math.random() * tipsFiltrats.length)];
+        if (tip) {
+          const trad = tip[idioma] || tip.ca;
+          html += `
+            <div style="background:#1a1a1a;padding:15px;border-radius:12px;margin-bottom:15px;">
+              <div style="color:#4CAF50;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:8px;">${cat}</div>
+              <h4 style="margin:0 0 8px 0;">${trad.titol}</h4>
+              <p style="margin:0;color:#aaa;line-height:1.5;">${trad.text}</p>
+            </div>
+          `;
+        }
+      }
+    });
+    html += `<button class="btn btn-sec" onclick="mostrarBibliotecaTab('tips')" style="width:100%;">🔄 Següent tip</button>`;
+    cont.innerHTML = html;
+  }
+}
+
+// === MINI-JOC ===
+function iniciarMinijoc() {
+  if (FRASES_MINIJOC.length === 0) return;
+
+  const plantilla = FRASES_MINIJOC[Math.floor(Math.random() * FRASES_MINIJOC.length)];
+  fraseActual = generarFraseAmbEmojis(plantilla);
+  seleccioActual = [];
+
+  const cont = document.getElementById('gremi-contenidor');
+  let html = `<h3>${TRADUCCIONS[idioma].minijoc}</h3>`;
+  html += `<div style="background:#1a1a1a;padding:15px;border-radius:12px;margin-bottom:15px;text-align:center;">`;
+  html += `<p style="color:#888;margin-bottom:10px;">${TRADUCCIONS[idioma].novaFrase}:</p>`;
+  html += `<div style="font-size:18px;font-weight:600;">${fraseActual.text}</div>`;
+  html += `</div>`;
+
+  html += `<div id="frase-construida" style="min-height:50px;background:#0a0a0a;border:2px dashed #333;border-radius:10px;padding:10px;margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;"></div>`;
+
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin-bottom:15px;">`;
+  fraseActual.opcions.forEach((emoji, idx) => {
+    html += `<button class="btn btn-sec" onclick="seleccionarEmoji('${emoji}', ${idx}, this)" style="font-size:28px;padding:12px;">${emoji}</button>`;
+  });
+  html += `</div>`;
+
+  html += `<button class="btn btn-principal" onclick="comprovarMinijoc()" style="width:100%;">${TRADUCCIONS[idioma].comprovar}</button>`;
+  html += `<div id="feedback-minijoc" style="margin-top:15px;text-align:center;font-weight:700;"></div>`;
+
+  cont.innerHTML = html;
+}
+
+function generarFraseAmbEmojis(plantilla) {
+  let text = plantilla.text;
+  let resposta = [];
+  let opcions = [];
+
+  plantilla.categories.forEach(cat => {
+    const emojisCat = CATEGORIES_EMOJI[cat] || ['❓'];
+    const emoji = emojisCat[Math.floor(Math.random() * emojisCat.length)];
+    text = text.replace(`{${cat}}`, emoji);
+    resposta.push(emoji);
+    opcions.push(emoji);
+  });
+
+  // Afegeix emojis extra per confondre
+  const altresCats = Object.keys(CATEGORIES_EMOJI).filter(c =>!plantilla.categories.includes(c));
+  while (opcions.length < 8 && altresCats.length > 0) {
+    const catRandom = altresCats[Math.floor(Math.random() * altresCats.length)];
+    const emoji = CATEGORIES_EMOJI[catRandom][Math.floor(Math.random() * CATEGORIES_EMOJI[catRandom].length)];
+    if (!opcions.includes(emoji)) opcions.push(emoji);
+  }
+
+  return {text, resposta: resposta.sort(), opcions: opcions.sort(() => Math.random() - 0.5)};
+}
+
+function seleccionarEmoji(emoji, idx, btn) {
   if (btn.disabled) return;
-  emojiSeleccionats.push(emoji);
+  seleccioActual.push(emoji);
   btn.disabled = true;
   const slot = document.createElement('span');
-  slot.className = 'emoji-slot';
+  slot.style.fontSize = '32px';
   slot.textContent = emoji;
   slot.onclick = () => treureEmoji(emoji, idx, btn, slot);
   document.getElementById('frase-construida').appendChild(slot);
 }
 
 function treureEmoji(emoji, idx, btn, slot) {
-  emojiSeleccionats = emojiSeleccionats.filter(e => e!== emoji);
+  seleccioActual = seleccioActual.filter(e => e!== emoji);
   btn.disabled = false;
   slot.remove();
 }
 
-window.comprovarMec1 = function() {
-  const feedback = document.getElementById('minijoc-feedback');
-  const correcte = JSON.stringify(emojiSeleccionats) === JSON.stringify(fraseActual.emojis);
+function comprovarMinijoc() {
+  const feedback = document.getElementById('feedback-minijoc');
+  const correcte = JSON.stringify(seleccioActual.sort()) === JSON.stringify(fraseActual.resposta);
+
   if (correcte) {
-    feedback.className = 'correcte';
-    feedback.innerHTML = `✅ Correcte! <div class="gramatica">${fraseActual.gramatica}</div>`;
-    estatJoc.xp += 10;
-    estatJoc.recordRacha++;
+    feedback.style.color = '#4CAF50';
+    feedback.textContent = TRADUCCIONS[idioma].correcte;
+    NIVELL_MINIJOC.xp += 20;
+    estat.monedes += 5;
+    estat.xp += 10;
+    estat.recordRacha++;
+    if (NIVELL_MINIJOC.xp >= NIVELL_MINIJOC.xpPerNivel) {
+      NIVELL_MINIJOC.nivelActual++;
+      NIVELL_MINIJOC.xp = 0;
+    }
     guardarEstat();
     actualitzarUI();
+    setTimeout(iniciarMinijoc, 1500);
   } else {
-    feedback.className = 'incorrecte';
-    feedback.innerHTML = `❌ Prova de nou. Ordre correcte: ${fraseActual.emojis.join(' ')}`;
-    estatJoc.recordRacha = 0;
+    feedback.style.color = '#f44336';
+    feedback.textContent = `${TRADUCCIONS[idioma].incorrecte} ${fraseActual.resposta.join(' ')}`;
+    estat.recordRacha = 0;
   }
-}
-
-window.iniciarMec2 = function() {
-  const contenidor = document.getElementById('minijoc-container');
-  const frase = getRandomFrase(estatJoc.nivellActual);
-  contenidor.innerHTML = `
-    <div id="minijoc-titol">Mecànica 2: Traducció</div>
-    <div id="instruccio-mec2">Escriu en ${idiomaActual.split('-')[1]}:</div>
-    <div id="frase-a-traduir">${frase.ca}</div>
-    <input type="text" id="input-traduccio" placeholder="La teva traducció...">
-    <button class="btn-encert" onclick="comprovarMec2('${frase[idiomaActual.split('-')[1]]}')">Comprovar</button>
-    <div id="feedback-mec2"></div>
-    <button class="btn-nova" onclick="iniciarMec1()">⬅️ Tornar a Mecànica 1</button>
-  `;
-}
-
-window.comprovarMec2 = function(respostaCorrecta) {
-  const input = document.getElementById('input-traduccio').value.toLowerCase().trim();
-  const feedback = document.getElementById('feedback-mec2');
-  const correcte = input === respostaCorrecta.toLowerCase();
-  if (correcte) {
-    feedback.className = 'correcte';
-    feedback.textContent = '✅ Molt bé!';
-    estatJoc.monedes += 5;
-    guardarEstat();
-    actualitzarUI();
-  } else {
-    feedback.className = 'incorrecte';
-    feedback.textContent = `❌ La resposta era: ${respostaCorrecta}`;
-  }
-}
-
-// === GREMI AMB SUB-TABS ===
-window.mostrarGremi = function() {
-  const contenidor = document.getElementById('gremi-contenidor');
-  contenidor.innerHTML = `
-    <div class="sub-tabs">
-      <button class="sub-tab-btn active" onclick="mostrarSubTab('diccionari', this)">📖 Diccionari</button>
-      <button class="sub-tab-btn" onclick="mostrarSubTab('memory', this)">🎮 Mini-joc</button>
-      <button class="sub-tab-btn" onclick="mostrarSubTab('tips', this)">💡 Tips</button>
-      <button class="sub-tab-btn" onclick="mostrarSubTab('lectura', this)">📚 Lectura</button>
-    </div>
-    <div id="gremi-subcontent"></div>
-  `;
-  mostrarSubTab('diccionari', document.querySelector('.sub-tab-btn'));
-}
-
-window.mostrarSubTab = function(tab, btn) {
-  document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  if (window.memoryInterval) {
-    clearInterval(window.memoryInterval);
-    window.memoryInterval = null;
-  }
-
-  if (tab === 'diccionari') mostrarDiccionari();
-  if (tab === 'memory') mostrarMemory();
-  if (tab === 'tips') mostrarTips();
-  if (tab === 'lectura') mostrarLectura();
-}
-
-// === DICCIONARI ===
-window.mostrarDiccionari = function() {
-  const contenidor = document.getElementById('gremi-subcontent');
-  const emojis = getEmojisPerNivell(estatJoc.nivellActual);
-  contenidor.innerHTML = `
-    <h3>📖 Diccionari d'Emojis</h3>
-    <div class="diccionari-grid">
-      ${emojis.map(e => `<div class="emoji-item" title="${e.ca}">${e.emoji}</div>`).join('')}
-    </div>
-  `;
-}
-
-// === MEMORY ===
-window.mostrarMemory = function() {
-  const contenidor = document.getElementById('gremi-subcontent');
-  estatJoc.memoryParells = 0;
-
-  if (window.memoryInterval) {
-    clearInterval(window.memoryInterval);
-    window.memoryInterval = null;
-  }
-
-  const emojis = getEmojisPerNivell(estatJoc.nivellActual).slice(0,6);
-  const parelles = [...emojis,...emojis].sort(() => Math.random()-0.5);
-
-  contenidor.innerHTML = `
-    <div class="memory-grid" id="memory-grid"></div>
-    <div id="memory-stats">Parells: 0/6 | Temps: 0</div>
-  `;
-
-  let temps = 0;
-  window.memoryInterval = setInterval(() => {
-    temps++;
-    const stats = document.getElementById('memory-stats');
-    if (stats) stats.textContent = `Parells: ${estatJoc.memoryParells}/6 | Temps: ${temps}`;
-  }, 1000);
-
-  const grid = document.getElementById('memory-grid');
-  parelles.forEach((e, idx) => {
-    const card = document.createElement('div');
-    card.className = 'memory-card';
-    card.dataset.emoji = e.emoji;
-    card.onclick = () => voltejarCarta(card);
-    grid.appendChild(card);
-  });
-}
-
-let cartesVoltejades = [];
-function voltejarCarta(card) {
-  if (card.classList.contains('voltejada') || cartesVoltejades.length === 2) return;
-  card.classList.add('voltejada');
-  card.textContent = card.dataset.emoji;
-  cartesVoltejades.push(card);
-  if (cartesVoltejades.length === 2) {
-    setTimeout(() => {
-      if (cartesVoltejades[0].dataset.emoji === cartesVoltejades[1].dataset.emoji) {
-        cartesVoltejades.forEach(c => c.classList.add('acertada'));
-        estatJoc.memoryParells++;
-        if (estatJoc.memoryParells === 6) {
-          clearInterval(window.memoryInterval);
-          alert('Guanyat!');
-          estatJoc.monedes += 10;
-          guardarEstat();
-          actualitzarUI();
-        }
-      } else {
-        cartesVoltejades.forEach(c => {
-          c.classList.remove('voltejada');
-          c.textContent = '';
-        });
-      }
-      cartesVoltejades = [];
-    }, 800);
-  }
-}
-
-// === TIPS ===
-window.mostrarTips = function() {
-  const contenidor = document.getElementById('gremi-subcontent');
-  const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const categoria = ['gramatica', 'vocabulari', 'cultura'][Math.floor(Math.random() * 3)];
-  const tip = getRandomTip(categoria, nivell);
-  const data = getTipTranslation(tip, idiomaActual);
-
-  const textCA = tip.ca.text.replace(/'/g, "\\'");
-  const textES = tip.es.text.replace(/'/g, "\\'");
-  const textEN = tip.en.text.replace(/'/g, "\\'");
-
-  contenidor.innerHTML = `
-    <div id="tips-container">
-      <div class="tip-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <h3>${data.titol}</h3>
-          <button onclick="parlarText('${textCA}', 'ca')" class="btn-audio">🔊</button>
-        </div>
-        <p id="tip-text" style="color:var(--text-sec);line-height:1.6;">${data.text}</p>
-        <div class="lang-audio-buttons">
-          <button onclick="parlarText('${textCA}', 'ca'); canviarTextTip('${textCA}')" class="lang-btn active">CA</button>
-          <button onclick="parlarText('${textES}', 'es'); canviarTextTip('${textES}')" class="lang-btn">ES</button>
-          <button onclick="parlarText('${textEN}', 'en'); canviarTextTip('${textEN}')" class="lang-btn">EN</button>
-        </div>
-      </div>
-      <button class="btn-encert" onclick="iniciarQuizTips()">🧠 Contestar</button>
-      <div id="quiz-tips-container" style="display:none">
-        <p id="pregunta-tip"></p>
-        <input type="text" id="input-resposta-tip" placeholder="Escriu la resposta...">
-        <button class="btn-encert" onclick="comprovarRespostaTip()">Comprovar</button>
-        <button class="btn-secundari" onclick="saltarTip()">Saltar</button>
-        <button class="btn-audio" onclick="parlarTip()">🔊 Parlantito</button>
-        <div id="feedback-tip"></div>
-      </div>
-    </div>
-  `;
-}
-
-window.canviarTextTip = function(nouText) {
-  document.getElementById('tip-text').textContent = nouText;
-  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-}
-
-// === LECTURA ===
-window.mostrarLectura = function() {
-  const contenidor = document.getElementById('gremi-subcontent');
-  const nivell = getDificultatPerNivell(estatJoc.nivellActual);
-  const lang = idiomaActual.split('-')[0];
-  let html = '<h3>📚 Lectures</h3>';
-  for (let i = 0; i < 3; i++) {
-    const text = generarTextLectura(nivell, lang);
-    html += `
-      <div class="lectura-card">
-        <h4>Lectura ${i+1} - B${nivell}</h4>
-        <button class="btn-audio" onclick="parlarText('${text.replace(/'/g,"\\'")}', '${lang}')">🔊 Escoltar</button>
-        <p>${text}</p>
-      </div>
-    `;
-  }
-  html += `<button class="btn-nova" onclick="mostrarLectura()">🔄 Noves lectures</button>`;
-  contenidor.innerHTML = html;
-}
-
-// === MAPA 100 NIVELLS ===
-window.mostrarMapa = function() {
-  const contenidor = document.getElementById('mapa-contenidor');
-  let html = '<div id="mapa-nivells">';
-  for (let i = 1; i <= 100; i++) {
-    const bloquejat = i > estatJoc.nivellActual + 1;
-    const completat = i < estatJoc.nivellActual;
-    const actiu = i === estatJoc.nivellActual;
-    html += `<div class="nivell-btn ${bloquejat?'bloquejat':''} ${completat?'completat':''} ${actiu?'actiu':''}" onclick="${bloquejat?'':`seleccionarNivell(${i})`}">
-      ${bloquejat?'🔒':completat?'✅':i}
-      ${!bloquejat &&!completat?i:''}
-    </div>`;
-  }
-  html += '</div>';
-  contenidor.innerHTML = html;
-}
-
-window.seleccionarNivell = function(nivell) {
-  estatJoc.nivellActual = nivell;
-  guardarEstat();
-  actualitzarUI();
-  mostrarTab('missio');
 }
 
 // === BOTIGA ===
-window.mostrarBotiga = function() {
-  const contenidor = document.getElementById('botiga-contenidor');
+function mostrarBotiga() {
+  const cont = document.getElementById('botiga-contenidor');
+  if (typeof BOTIGA_DATA === 'undefined') {
+    cont.innerHTML = '<p>No hi ha packs disponibles</p>';
+    return;
+  }
+
   let html = '<div class="botiga-grid">';
-  BOTIGA_PACKS.forEach(pack => {
-    const comprat = estatJoc.packsComprats.includes(pack.id);
+  BOTIGA_DATA.forEach(pack => {
+    const comprat = estat.compres.includes(pack.id);
     html += `
-      <div class="pack-card ${comprat?'comprat':''}">
-        <div class="puck">${pack.emoji}</div>
+      <div class="pack-card ${comprat? 'comprat' : ''}">
+        <div style="font-size:40px;margin-bottom:10px;">${pack.emoji}</div>
         <h4>${pack.nom}</h4>
-        <p>${pack.preu} monedes</p>
-        <button ${comprat?'disabled':''} onclick="comprarPack('${pack.id}', ${pack.preu})">
-          ${comprat?'Comprat':'Comprar'}
+        <p style="color:#888;margin:8px 0;">${pack.preu} monedes</p>
+        <button class="btn ${comprat? 'btn-sec' : 'btn-principal'}"
+                ${comprat? 'disabled' : ''}
+                onclick="comprarPack('${pack.id}', ${pack.preu})">
+          ${comprat? 'Comprat' : 'Comprar'}
         </button>
       </div>
     `;
   });
   html += '</div>';
-  contenidor.innerHTML = html;
+  cont.innerHTML = html;
 }
 
-window.comprarPack = function(id, preu) {
-  if (estatJoc.monedes >= preu) {
-    estatJoc.monedes -= preu;
-    estatJoc.packsComprats.push(id);
+function comprarPack(id, preu) {
+  if (estat.monedes >= preu &&!estat.compres.includes(id)) {
+    estat.monedes -= preu;
+    estat.compres.push(id);
     guardarEstat();
     actualitzarUI();
+    carregarDades(); // Recarrega emojis amb el nou pack
     mostrarBotiga();
   }
 }
 
-// === UI ===
-function actualitzarUI() {
-  document.getElementById('nivell-actual').textContent = `Nivell ${estatJoc.nivellActual} - B${getDificultatPerNivell(estatJoc.nivellActual)}`;
-  document.getElementById('monedes').textContent = estatJoc.monedes;
-  document.getElementById('xp').textContent = estatJoc.xp;
-  document.getElementById('record').textContent = estatJoc.recordRacha;
+// === MAPA ===
+function mostrarMapa() {
+  const cont = document.getElementById('mapa-nivells');
+  let html = '';
+  for (let i = 1; i <= 100; i++) {
+    const bloquejat = i > NIVELL_MINIJOC.nivelActual + 1;
+    const completat = i < NIVELL_MINIJOC.nivelActual;
+    const actiu = i === NIVELL_MINIJOC.nivelActual;
+    html += `<div class="nivell-btn ${bloquejat? 'bloquejat' : ''} ${completat? 'completat' : ''} ${actiu? 'actiu' : ''}"
+             onclick="${bloquejat? '' : `seleccionarNivell(${i})`}">
+             ${bloquejat? '🔒' : completat? '✅' : i}
+             </div>`;
+  }
+  cont.innerHTML = html;
 }
 
-// === IDIOMA ===
-document.getElementById('idioma-select').addEventListener('change', (e) => {
-  idiomaActual = e.target.value;
-  estatJoc.idiomaActual = idiomaActual;
-  guardarEstat();
-  iniciarMec1();
-});
-
-// === INIT ===
-actualitzarUI();
-iniciarMec1();
+function seleccionarNivell(nivell) {
+  NIVELL_MINIJOC.nivelActual = nivell;
+  actualitzarUI();
+  mostrarGremi();
+  setTimeout(iniciarMinijoc, 100);
+}
